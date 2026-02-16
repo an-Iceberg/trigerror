@@ -1,4 +1,6 @@
+use trigerror::fun;
+
 fn main()
 {
-  println!("Hello, world!");
+  fun();
 }
