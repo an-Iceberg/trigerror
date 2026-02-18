@@ -1,4 +1,5 @@
-default:
+[default]
+run:
   cargo run --color always --message-format human
 
 test:
