@@ -1,3 +1,5 @@
+// TODO: Sync, announce and Pdelay messages are important.
+
 type Octet = u8;
 
 enum MessageType
@@ -99,6 +101,7 @@ enum GPTPMesage
     // TODO: header 11.4.2
     header: Header,
     // TODO: different versions
+    // TODO: 11.4.4.1-3
   },
   PdelayReq
   {

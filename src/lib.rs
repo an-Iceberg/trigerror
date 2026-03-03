@@ -20,6 +20,7 @@ pub fn extract_config() -> Trigerror
 
   let config = ini!("trigerror.ini");
 
+  // TODO: ; and # are comments (verify)
   let default = config["default"].clone();
 
   if let Some(Some(interfaces)) = config
@@ -80,7 +81,7 @@ pub fn extract_config() -> Trigerror
     .get("default")
     .and_then(|default| default.get("time_before"))
     .and_then(|time_before| time_before.as_ref())
-    .and_then(|time_before| time_before.parse::<f32>().ok())
+    .and_then(|time_before| time_before.parse::<u32>().ok())
   {
     trigerror.set_time_before(time_before);
   }
@@ -89,7 +90,7 @@ pub fn extract_config() -> Trigerror
     .get("default")
     .and_then(|default| default.get("time_after"))
     .and_then(|time_after| time_after.as_ref())
-    .and_then(|time_after| time_after.parse::<f32>().ok())
+    .and_then(|time_after| time_after.parse::<u32>().ok())
   {
     trigerror.set_time_after(time_after);
   }

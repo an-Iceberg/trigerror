@@ -21,9 +21,9 @@ pub struct Trigerror
   count_before: u32,
   count_after: u32,
   /// Time in miliseconds.
-  time_before: f32,
+  time_before: u32,
   /// Time in miliseconds.
-  time_after: f32,
+  time_after: u32,
   retrigger: bool,
   max_retriggers: u32,
 }
@@ -47,10 +47,10 @@ impl Trigerror
   pub fn set_count_after(&mut self, count_after: u32)
   { self.count_after = count_after; }
 
-  pub fn set_time_before(&mut self, time_before: f32)
+  pub fn set_time_before(&mut self, time_before: u32)
   { self.time_before = time_before; }
 
-  pub fn set_time_after(&mut self, time_after: f32)
+  pub fn set_time_after(&mut self, time_after: u32)
   { self.time_after = time_after; }
 
   pub fn set_retrigger(&mut self, retrigger: bool)

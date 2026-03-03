@@ -19,7 +19,7 @@ fn main()
   { extract_config() }
   else
   { Trigerror::new() };
-  // dbg!{trigerror};
+  dbg!{trigerror};
 
   // Read CLI arguments
   let cli = CLI::parse();
