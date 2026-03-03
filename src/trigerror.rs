@@ -7,24 +7,30 @@ use crate::constants::{
   DEFAULT_TIME_BEFORE
 };
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 pub struct Trigerror
 {
   // TODO: files path (where to store the captured data).
 
+  /// The interface(s), from which packets should be read.
   interfaces: Vec<String>,
   /// These are the protocols we want to listen for.
   protocols: Vec<String>,
 
   /// Only record these additional protocols (if None then record everything).
   filters: Option<Vec<String>>,
+  /// How many packets before the error should be recorded.
   count_before: u32,
+  /// How many packets after the error should be recorded.
   count_after: u32,
-  /// Time in miliseconds.
+  /// How many milliseconds before the error should the recording start.
   time_before: u32,
-  /// Time in miliseconds.
+  /// How many milliseconds after the error should the recording stop.
   time_after: u32,
+  /// If true and if errors happens after our initial error then the counter and
+  /// timer get reset.
   retrigger: bool,
+  /// The maximum amount of errors that should be recorded.
   max_retriggers: u32,
 }
 

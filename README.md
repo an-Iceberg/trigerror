@@ -3,6 +3,7 @@
 TODO: calculate filesize from captured packets
 TODO: sync, announce and Pdelay messages are important.
 NOTE: protocol names are (initially) those that wireshark uses for filtering
+TODO: https://wiki.archlinux.org/title/Capabilities
 
 ## Useful resources
 - https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page

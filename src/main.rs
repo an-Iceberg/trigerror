@@ -1,6 +1,7 @@
 use std::{env, ffi::OsStr, fs};
 
 use clap::Parser;
+use pcap::{Capture, Device};
 use trigerror::{cli::CLI, extract_config, trigerror::Trigerror};
 use ini::ini;
 
@@ -22,10 +23,37 @@ fn main()
   dbg!{trigerror};
 
   // Read CLI arguments
-  let cli = CLI::parse();
-  println!("interface(s): {:?}", cli.interfaces);
+  // let cli = CLI::parse();
+  // println!("interface(s): {:?}", cli.interfaces);
 
   // Reconfigure if necessary
 
   // Listen on interfaces.
+
+  dbg!{Device::list().unwrap()};
+  dbg!{"{:?}", Device::list()
+    .unwrap()
+    .iter()
+    .map(|device| device.clone().name)
+    .collect::<Vec<String>>()
+  };
+
+  let ethernet = Device::list()
+    .unwrap()
+    .iter()
+    .find(|device| device.name.starts_with("enp"))
+    .unwrap()
+    .to_owned();
+
+  let mut capture = Capture::from_device(ethernet)
+    .unwrap()
+    .promisc(true)
+    .snaplen(5_000)
+    .open()
+    .unwrap();
+
+  if let Ok(packet) = capture.next_packet()
+  {
+    dbg!{packet};
+  }
 }
