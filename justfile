@@ -16,3 +16,6 @@ test:
 
 clean:
   cargo clean --color always
+
+dev: build
+  ./target/debug/trigerror --help
