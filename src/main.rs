@@ -52,8 +52,15 @@ fn main()
     .open()
     .unwrap();
 
-  if let Ok(packet) = capture.next_packet()
+  let packet = capture.next_packet();
+  // dbg!{packet};
+  match packet
   {
-    dbg!{packet};
-  }
+    Ok(packet) => { dbg!{packet}; },
+    Err(error) => { dbg!{error}; },
+  };
+  // if let Ok(packet) = capture.next_packet()
+  // {
+  //   dbg!{packet};
+  // }
 }

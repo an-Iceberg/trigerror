@@ -17,5 +17,11 @@ test:
 clean:
   cargo clean --color always
 
-dev: build
-  ./target/debug/trigerror --help
+# dev: build
+#   ./target/debug/trigerror --help
+
+give-net-cap:
+  sudo setcap cap_net_raw+ep target/debug/trigerror
+
+dev: build give-net-cap
+  target/debug/trigerror
