@@ -1,9 +1,8 @@
-use std::{env, ffi::OsStr, fs};
+use std::{env, ffi::OsStr, fs, process::exit};
 
 use clap::Parser;
 use pcap::{Capture, Device};
-use trigerror::{cli::CLI, extract_config, trigerror::Trigerror};
-use ini::ini;
+use trigerror::{cli::CLI, configure_trigerror_from_cli, extract_config_from_ini, trigerror::Trigerror};
 
 fn main()
 {
@@ -13,20 +12,20 @@ fn main()
   let paths = fs::read_dir(cwd).unwrap();
 
   // Construct trigerror instance with configuration.
-  let trigerror = if paths
+  let mut trigerror = if paths
     .flatten()
     .map(|path| path.file_name())
     .any(|file| file == OsStr::new("trigerror.ini"))
-  { extract_config() }
+  { extract_config_from_ini() }
   else
   { Trigerror::new() };
+  // dbg!{trigerror};
+
+  // Read CLI arguments and reconfigure if necessary
+  trigerror = configure_trigerror_from_cli(CLI::parse(), trigerror);
+
   dbg!{trigerror};
-
-  // Read CLI arguments
-  // let cli = CLI::parse();
-  // println!("interface(s): {:?}", cli.interfaces);
-
-  // Reconfigure if necessary
+  exit(0);
 
   // Listen on interfaces.
 
@@ -48,17 +47,34 @@ fn main()
   let mut capture = Capture::from_device(ethernet)
     .unwrap()
     .promisc(true)
-    .snaplen(5_000)
+    .immediate_mode(true) // This has a higher load on CPU.
+    // .snaplen(5_000)
     .open()
     .unwrap();
 
-  let packet = capture.next_packet();
-  // dbg!{packet};
-  match packet
+  let mut savefile = capture.savefile("test.pcap").unwrap();
+  for _ in 0..50
   {
-    Ok(packet) => { dbg!{packet}; },
-    Err(error) => { dbg!{error}; },
-  };
+    let packet = capture.next_packet().unwrap();
+    savefile.write(&packet);
+  }
+
+  // while let Ok(packet) = capture.next_packet()
+  // { println!("{:?}", packet); }
+
+  // let packet = capture.next_packet();
+  // // dbg!{packet};
+  // match packet
+  // {
+  //   Ok(packet) =>
+  //   {
+  //     dbg!{&packet};
+  //     println!();
+  //     dbg!{&packet.header};
+  //   },
+  //   Err(error) => { dbg!{error}; },
+  // };
+
   // if let Ok(packet) = capture.next_packet()
   // {
   //   dbg!{packet};

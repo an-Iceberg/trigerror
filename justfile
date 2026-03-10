@@ -25,3 +25,9 @@ give-net-cap:
 
 dev: build give-net-cap
   target/debug/trigerror
+
+dev2: build
+  target/debug/trigerror --interfaces "enp0s13f0u3u2i5" --protocols "ptp" --filters "ptp,gptp, http, ssh" --count-before 20 --retrigger false
+
+dev3: build
+  target/debug/trigerror --filters ""

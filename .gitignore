@@ -21,3 +21,6 @@ target
 .idea/
 
 .vscode/
+
+# Any `.pcap` files. They are produced as tests and are different for each run of the app.
+*.pcap

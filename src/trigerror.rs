@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::constants::{
   DEFAULT_COUNT_AFTER,
   DEFAULT_COUNT_BEFORE,
@@ -16,6 +18,9 @@ pub struct Trigerror
   interfaces: Vec<String>,
   /// These are the protocols we want to listen for.
   protocols: Vec<String>,
+
+  /// Path where the captured data is stored as a `.pcap` file.
+  capture_files_path: PathBuf,
 
   /// Only record these additional protocols (if None then record everything).
   filters: Option<Vec<String>>,
@@ -43,6 +48,9 @@ impl Trigerror
 
   pub fn set_filters(&mut self, filters: Option<Vec<String>>)
   { self.filters = filters; }
+
+  pub fn set_capture_files_path(&mut self, path: PathBuf)
+  { self.capture_files_path = path; }
 
   pub fn set_protocols(&mut self, protocols: Vec<String>)
   { self.protocols = protocols; }
@@ -74,6 +82,7 @@ impl Default for Trigerror
     {
       interfaces: Vec::default(),
       filters: None,
+      capture_files_path: PathBuf::from("."),
       protocols: Vec::default(),
       count_before: DEFAULT_COUNT_BEFORE,
       count_after: DEFAULT_COUNT_AFTER,
