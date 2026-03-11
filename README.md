@@ -6,6 +6,7 @@
 - TODO: https://wiki.archlinux.org/title/Capabilities
 - TODO: `.pcap` vs. `.pcapng`
 - TODO: research: `.pcap`/`.pcapng` file format
+- TODO: use/extend `VecDeque` as a ring buffer.
 
 ## Useful resources
 - https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page
