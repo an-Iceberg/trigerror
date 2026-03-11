@@ -7,6 +7,7 @@
 - TODO: `.pcap` vs. `.pcapng`
 - TODO: research: `.pcap`/`.pcapng` file format
 - TODO: use/extend `VecDeque` as a ring buffer.
+- TODO: for writing `.pcapng` files, 2 crates are of interest: `pcapng-writer` and `pcap-file`
 
 ## Useful resources
 - https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page

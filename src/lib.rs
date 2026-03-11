@@ -98,6 +98,7 @@ pub fn extract_config_from_ini() -> Trigerror
   return trigerror;
 }
 
+// NOTE: maybe move this into the `trigerror` struct?
 /// A pure function :D
 pub fn configure_trigerror_from_cli(cli: CLI, mut trigerror: Trigerror) -> Trigerror
 {
