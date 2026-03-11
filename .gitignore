@@ -21,6 +21,7 @@ target
 .idea/
 
 .vscode/
+.zed/
 
 # Any `.pcap` files. They are produced as tests and are different for each run of the app.
 *.pcap
