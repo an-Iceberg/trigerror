@@ -10,11 +10,7 @@ pub mod trigerror;
 pub mod constants;
 pub mod owned_packet;
 
-pub fn fun()
-{
-  println!("hello world");
-}
-
+// TODO: this needs to take a file path. That way we can re-use this for the custom config path.
 pub fn extract_config_from_ini() -> Trigerror
 {
   let mut trigerror = Trigerror::new();

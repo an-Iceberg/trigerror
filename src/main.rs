@@ -1,4 +1,4 @@
-use std::{env, ffi::OsStr, fs::{self, read_dir}, process::exit};
+use std::{env, ffi::OsStr, fs::{self, read_dir}, ops::Deref, process::exit};
 
 use clap::Parser;
 use pcap::{Capture, Device, Packet, PacketCodec};
@@ -55,24 +55,22 @@ fn main()
 
   // One approach
   let mut savefile = capture.savefile("test.pcap").unwrap();
-  for _ in 0..50
-  {
-    let packet = capture.next_packet().unwrap();
-    savefile.write(&packet);
-  }
-
-  // // Another approach
-  // for _ in 0..50
-  // { capture.next_packet().ok(); }
-  // for packet in capture.iter(Codec)
-  // {
-  //   let packet = packet.unwrap();
-  //   dbg!{packet};
-  // }
+  for _ in 0..50 { savefile.write(&capture.next_packet().unwrap()); }
 
   // Alternative approach
-  let mut savefile = capture.savefile("test3.pcap").unwrap();
+  let mut savefile = capture.savefile("test2.pcap").unwrap();
   capture.for_each(Some(50), |packet| savefile.write(&packet)).unwrap();
+
+  // Another approach
+  let mut packets = vec![];
+  for packet in capture.iter(Codec)
+  {
+    let packet = packet.unwrap();
+    packets.push(packet);
+    if packets.len() >= 50 { break; }
+  }
+  for packet in packets
+  { println!("{:?} {:?}", packet.header, packet.data); }
 
   // for packet in packets { savefile.write(&packet); }
 
