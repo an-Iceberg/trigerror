@@ -1,15 +1,16 @@
-[default]
-run:
-  cargo run --color always --message-format human
-
 build:
   cargo build --color always --message-format human
+  sudo setcap cap_net_raw+ep target/debug/trigerror
 
-run-release:
-  cargo run --release --color always --message-format human
+run: build
+  target/debug/trigerror
 
 build-release:
   cargo build --release --color always --message-format human
+  sudo setcap cap_net_raw+ep target/release/trigerror
+
+run-release: build-release
+  target/release/trigerror
 
 test:
   cargo test --color always --message-format human
@@ -20,10 +21,10 @@ clean:
 # dev: build
 #   ./target/debug/trigerror --help
 
-give-net-cap:
-  sudo setcap cap_net_raw+ep target/debug/trigerror
+# give-net-cap:
+#   sudo setcap cap_net_raw+ep target/debug/trigerror
 
-dev: build give-net-cap
+dev: build
   target/debug/trigerror
 
 dev2: build

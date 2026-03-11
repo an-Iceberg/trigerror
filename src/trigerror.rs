@@ -12,16 +12,12 @@ use crate::constants::{
 #[derive(Debug, Clone)]
 pub struct Trigerror
 {
-  // TODO: files path (where to store the captured data).
-
   /// The interface(s), from which packets should be read.
   interfaces: Vec<String>,
   /// These are the protocols we want to listen for.
   protocols: Vec<String>,
-
   /// Path where the captured data is stored as a `.pcap` file.
   capture_files_path: PathBuf,
-
   /// Only record these additional protocols (if None then record everything).
   filters: Option<Vec<String>>,
   /// How many packets before the error should be recorded.
@@ -32,8 +28,7 @@ pub struct Trigerror
   time_before: u32,
   /// How many milliseconds after the error should the recording stop.
   time_after: u32,
-  /// If true and if errors happens after our initial error then the counter and
-  /// timer get reset.
+  /// If true and if errors happens after our initial error then the counter and timer get reset.
   retrigger: bool,
   /// The maximum amount of errors that should be recorded.
   max_retriggers: u32,
