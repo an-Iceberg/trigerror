@@ -49,12 +49,12 @@ fn main()
     .unwrap()
     .promisc(true)
     .immediate_mode(true) // This has a higher load on CPU.
-    // .snaplen(5_000)
+    .snaplen(5_000)
     .open()
     .unwrap();
 
   // This is how one would set the filter(s).
-  // capture.filter("ptp and gptp", true).ok();
+  capture.filter("ptp and gptp", true).ok();
 
   print!("First approach: ");
   // One approach

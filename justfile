@@ -25,7 +25,7 @@ clean:
 #   sudo setcap cap_net_raw+ep target/debug/trigerror
 
 dev: build
-  target/debug/trigerror
+  target/debug/trigerror --help
 
 dev2: build
   target/debug/trigerror --interfaces "enp0s13f0u3u2i5" --protocols "ptp" --filters "ptp,gptp, http, ssh" --count-before 20 --retrigger false
