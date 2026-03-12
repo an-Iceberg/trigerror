@@ -1,6 +1,7 @@
 use pcap::{PacketCodec, PacketHeader};
 
-/// Represents an ethernet frame with header and data.
+// TODO: extract an ethernet frame from this.
+/// Represents a captured packet.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Packet
 {

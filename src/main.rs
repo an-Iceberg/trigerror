@@ -1,63 +1,126 @@
-use std::{env, ffi::OsStr, fs::{self, read_dir}, ops::Deref, process::exit};
+use std::{env, ffi::OsStr, fs::{self, read_dir}, ops::Deref, path::PathBuf, process::exit};
 
 use clap::Parser;
 use pcap::{Capture, Device, Packet, PacketCodec};
-use trigerror::{cli::CLI, configure_trigerror_from_cli, packet::Codec, extract_config_from_ini, ring_buffer::{self, RingBuffer}, trigerror::Trigerror};
+use ratatui::crossterm::style::Stylize;
+use trigerror::{cli::CLI, packet::Codec, ring_buffer::{self, RingBuffer}, trigerror::Trigerror};
 
 fn main()
 {
   // Check if `trigerror.ini` file exists in the `cwd`.
-  let cwd = env::current_dir().expect("call to cwd failed");
-  // dbg!{cwd.display()};
-  // let paths = fs::read_dir(cwd).unwrap();
+  // let cwd = match env::current_dir()
+  // {
+  //   Ok(cwd) =>
+  //   {
+  //     println!("[ {} ] got cwd", "OK".green());
+  //     cwd
+  //   }
+  //   Err(error) =>
+  //   {
+  //     println!("[ {} ] couldn't get cwd b/c: {}", "ERROR".red(), error);
+  //     exit(-1);
+  //   }
+  // };
 
-  // Construct trigerror instance with configuration.
-  let mut trigerror = if read_dir(cwd)
-    .expect("couldn't read cwd")
-    .flatten()
-    .map(|path| path.file_name())
-    .any(|file| file == OsStr::new("trigerror.ini"))
-  { extract_config_from_ini() }
-  else
-  { Trigerror::new() };
-  // dbg!{trigerror};
+  // let read_dir = match read_dir(cwd)
+  // {
+  //   Ok(read_dir) =>
+  //   {
+  //     println!("[ {} ] read directory", "OK".green());
+  //     read_dir
+  //   }
+  //   Err(error) =>
+  //   {
+  //     println!("[ {} ] couldn't read directory b/c: {}", "ERROR".red(), error);
+  //     exit(-1);
+  //   }
+  // };
 
-  // Read CLI arguments and reconfigure if necessary
-  trigerror = configure_trigerror_from_cli(CLI::parse(), trigerror);
+  // let config_file_present = read_dir
+  //   .flatten()
+  //   .map(|path| path.file_name())
+  //   .any(|file| file == OsStr::new("trigerror.ini"));
 
-  dbg!{&trigerror};
-  // exit(0);
+  let mut trigerror = Trigerror::configure_from_ini(PathBuf::from("trigerror.ini"));
+  trigerror.configure_from_cli(CLI::parse());
 
-  // Listen on interfaces.
-
-  dbg!{Device::list().unwrap()};
-  dbg!{"{:?}", Device::list()
-    .unwrap()
-    .iter()
-    .map(|device| device.clone().name)
-    .collect::<Vec<String>>()
+  let devices = match Device::list()
+  {
+    Ok(devs) =>
+    {
+      println!("[ {} ] listed devices", "OK".green());
+      devs
+    }
+    Err(error) =>
+    {
+      println!("[ {} ] couldn't list devices b/c: {}", "ERROR".red(), error);
+      exit(-1);
+    }
   };
 
-  let first_device = Device::list()
-    .unwrap()
+  let first_device = match devices
     .iter()
     .find(|device| device.name.contains(trigerror.interfaces.first().unwrap()))
-    .unwrap()
-    .to_owned();
+  {
+    Some(first_device) =>
+    {
+      println!("[ {} ] device {} found", "OK".green(), first_device.name);
+      first_device.to_owned()
+    }
+    None =>
+    {
+      println!(
+        "[ {} ] device {} not found in device list. Device list: {:?}",
+        "ERROR".red(),
+        trigerror.interfaces.first().unwrap(),
+        devices.iter().map(|device| device.name.to_owned()).collect::<Vec<String>>(),
+      );
+      exit(-1);
+    }
+  };
 
-  let mut capture = Capture::from_device(first_device)
-    .unwrap()
-    .promisc(true)
-    .immediate_mode(true) // This has a higher load on CPU.
-    .snaplen(5_000)
-    .open()
-    .unwrap();
+  let capture_inactive = match Capture::from_device(first_device)
+  {
+    Ok(cap) =>
+    {
+      println!("[ {} ] created capture device", "OK".green());
+      cap.promisc(true)
+        .immediate_mode(true)
+        .snaplen(5_000)
+    }
+    Err(error) =>
+    {
+      println!("[ {} ] couldn't create capture device b/c: {}", "ERROR".red(), error);
+      exit(-1);
+    }
+  };
+
+  let mut capture = match capture_inactive.open()
+  {
+    Ok(cap) =>
+    {
+      println!("[ {} ] opened capture device", "OK".green());
+      cap
+    }
+    Err(error) =>
+    {
+      println!("[ {} ] couldn't open capture device b/c: {}", "ERROR".red(), error);
+      exit(-1);
+    }
+  };
+
+  // let mut capture = Capture::from_device(first_device)
+  //   .unwrap()
+  //   .promisc(true)
+  //   .immediate_mode(true) // This has a higher load on CPU.
+  //   // .snaplen(5_000)
+  //   .open()
+  //   .unwrap();
 
   // This is how one would set the filter(s).
-  capture.filter("ptp and gptp", true).ok();
+  // capture.filter("ptp and gptp", true).ok();
 
   print!("First approach: ");
-  // One approach
   let mut savefile = capture.savefile("test.pcap").unwrap();
   for _ in 0..50
   {
@@ -67,7 +130,6 @@ fn main()
   println!(" Done.");
 
   print!("Second approach: ");
-  // Alternative approach
   let mut savefile = capture.savefile("test2.pcap").unwrap();
   capture.for_each(Some(50), |packet|
   {

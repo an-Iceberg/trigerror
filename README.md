@@ -5,7 +5,6 @@
 - TODO: https://wiki.archlinux.org/title/Capabilities
 - TODO: `.pcap` vs. `.pcapng`
 - TODO: research: `.pcap`/`.pcapng` file format
-- TODO: use/extend `VecDeque` as a ring buffer.
 - TODO: for writing `.pcapng` files, 2 crates are of interest: `pcapng-writer` and `pcap-file`
 - NOTE: https://biot.com/capstats/bpf.html
 - NOTE: [intona ethernet tap source code](https://github.com/intona/ethernet-debugger#readme)
@@ -16,6 +15,7 @@
 - TODO: for testing: 100th packet as error trigger
 - NOTE: param prio: 1. time 2. memory size 3. packet count\
   if no more memory, trim start of error
+- TODO: consider some logging library: https://docs.rs/log/latest/log/
 
 ## Useful resources
 - https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page

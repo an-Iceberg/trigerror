@@ -1,13 +1,14 @@
 use std::path::PathBuf;
-
-use crate::constants::{
+use ratatui::style::Stylize;
+use ini::ini;
+use crate::{cli::CLI, constants::{
   DEFAULT_COUNT_AFTER,
   DEFAULT_COUNT_BEFORE,
   DEFAULT_MAX_RETRIGGERS,
   DEFAULT_RETRIGGER,
   DEFAULT_TIME_AFTER,
   DEFAULT_TIME_BEFORE
-};
+}};
 
 #[derive(Debug, Clone)]
 pub struct Trigerror
@@ -36,41 +37,6 @@ pub struct Trigerror
   pub max_retriggers: u32,
 }
 
-impl Trigerror
-{
-  pub fn new() -> Self { return Self::default(); }
-
-  // pub fn set_interfaces(&mut self, interfaces: Vec<String>)
-  // { self.interfaces = interfaces; }
-
-  // pub fn set_filters(&mut self, filters: Option<Vec<String>>)
-  // { self.filters = filters; }
-
-  // pub fn set_capture_files_path(&mut self, path: PathBuf)
-  // { self.capture_files_path = path; }
-
-  // pub fn set_protocols(&mut self, protocols: Vec<String>)
-  // { self.protocols = protocols; }
-
-  // pub fn set_count_before(&mut self, count_before: u32)
-  // { self.count_before = count_before; }
-
-  // pub fn set_count_after(&mut self, count_after: u32)
-  // { self.count_after = count_after; }
-
-  // pub fn set_time_before(&mut self, time_before: u32)
-  // { self.time_before = time_before; }
-
-  // pub fn set_time_after(&mut self, time_after: u32)
-  // { self.time_after = time_after; }
-
-  // pub fn set_retrigger(&mut self, retrigger: bool)
-  // { self.retrigger = retrigger; }
-
-  // pub fn set_max_retriggers(&mut self, max_retriggers: u32)
-  // { self.max_retriggers = max_retriggers; }
-}
-
 impl Default for Trigerror
 {
   fn default() -> Self
@@ -88,5 +54,168 @@ impl Default for Trigerror
       retrigger: DEFAULT_RETRIGGER,
       max_retriggers: DEFAULT_MAX_RETRIGGERS,
     };
+  }
+}
+
+impl Trigerror
+{
+  pub fn new() -> Self { return Self::default(); }
+
+  pub fn configure_from_ini(path: PathBuf) -> Trigerror
+  {
+    let mut trigerror = Trigerror::new();
+
+    let config = match ini!(safe path.to_str().unwrap())
+    {
+      Ok(config) =>
+      {
+        // BUG: why does this not print the OK in green⁈
+        println!("[ {} ] found config file @ {}", "OK".green(), path.to_str().unwrap());
+        config.to_owned()
+      }
+      Err(error) =>
+      {
+        println!("[ {} ] didn't find config file b/c: {}", "ERROR".red(), error);
+        println!("[ {} ] falling back to default configurations", "INFO".cyan());
+        return trigerror;
+      }
+    };
+
+    let default = match config.get("default")
+    {
+      Some(default) =>
+      {
+        // BUG: why does this not print the OK in green⁈
+        println!("[ {} ] found config(s)", "OK".green());
+        default.to_owned()
+      }
+      None =>
+      {
+        println!("[ {} ] no configs in file", "ERROR".red());
+        println!("[ {} ] falling back to default configurations", "INFO".cyan());
+        return trigerror;
+      }
+    };
+
+    // NOTE: if you're bored you can add log messages to all these.
+
+    if let Some(Some(interfaces)) = default.get("interfaces")
+    {
+      trigerror.interfaces = interfaces
+        .split(",")
+        .map(|interface| interface.trim().to_string())
+        .collect();
+    }
+
+    if let Some(Some(protocols)) = default.get("protocols")
+    {
+      trigerror.protocols = protocols
+        .split(",")
+        .map(|protocol| protocol.trim().to_string())
+        .collect();
+    }
+
+    if let Some(Some(filters)) = default.get("filters")
+    {
+      trigerror.filters = Some(filters
+        .split(",")
+        .map(|protocol| protocol.trim().to_string())
+        .collect()
+      );
+    }
+
+    if let Some(count_before) = default.get("count_before")
+      .and_then(|count_before| count_before.as_ref())
+      .and_then(|count_before| count_before.parse::<u32>().ok())
+    { trigerror.count_before = count_before; }
+
+    if let Some(count_after) = default.get("count_after")
+      .and_then(|count_after| count_after.as_ref())
+      .and_then(|count_after| count_after.parse::<u32>().ok())
+    { trigerror.count_after = count_after; }
+
+    if let Some(time_before) = default.get("time_before")
+      .and_then(|time_before| time_before.as_ref())
+      .and_then(|time_before| time_before.parse::<u32>().ok())
+    { trigerror.time_before = time_before; }
+
+    if let Some(time_after) = default.get("time_after")
+      .and_then(|time_after| time_after.as_ref())
+      .and_then(|time_after| time_after.parse::<u32>().ok())
+    { trigerror.time_after = time_after; }
+
+    if let Some(retrigger) = default.get("retrigger")
+      .and_then(|retrigger| retrigger.as_ref())
+      .and_then(|retrigger| retrigger.parse::<bool>().ok())
+    { trigerror.retrigger = retrigger; }
+
+    if let Some(max_retriggers) = default.get("max_retriggers")
+      .and_then(|max_retriggers| max_retriggers.as_ref())
+      .and_then(|max_retriggers| max_retriggers.parse::<u32>().ok())
+    { trigerror.max_retriggers = max_retriggers; }
+
+    return trigerror;
+  }
+
+  pub fn configure_from_cli(&mut self, cli: CLI)
+  {
+    if let Some(config_file) = cli.config_file_location
+    {
+      println!("[ {} ] config file location given; configuring from said file", "INFO".cyan());
+      *self = Trigerror::configure_from_ini(config_file);
+    }
+
+    // Configuring interfaces thru CLI
+    if let Some(interfaces) = cli.interfaces
+    {
+      self.interfaces = interfaces
+        .split(",")
+        .map(|interface| interface.trim().to_string())
+        .collect();
+    }
+
+    // Configuring protocols thru CLI
+    if let Some(protocols) = cli.protocols
+    {
+      self.protocols = protocols
+        .split(",")
+        .map(|protocol| protocol.trim().to_string())
+        .collect();
+    }
+
+    if let Some(capture_files_path) = cli.capture_files_path
+    { self.capture_files_path = capture_files_path; }
+
+    if let Some(filters) = cli.filters
+    {
+      // This way one can reset the filters to `None` thru the CLI.
+      if filters.is_empty() { self.filters = None; }
+      else
+      {
+        self.filters = Some(filters
+          .split(",")
+          .map(|filter| filter.trim().to_string())
+          .collect()
+        );
+      }
+    }
+
+    if let Some(count_before) = cli.count_before
+    { self.count_before = count_before; }
+
+    if let Some(count_after) = cli.count_after
+    { self.count_after = count_after; }
+
+    if let Some(time_before) = cli.time_before
+    { self.time_before = time_before; }
+
+    if let Some(time_after) = cli.time_after
+    { self.time_after = time_after; }
+
+    if let Some(retrigger) = cli.retrigger
+    { self.retrigger = retrigger; }
+
+    if let Some(max_retriggers) = cli.max_retriggers
+    { self.max_retriggers = max_retriggers; }
   }
 }

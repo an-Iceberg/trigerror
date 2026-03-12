@@ -33,5 +33,8 @@ dev2: build
 dev3: build
   target/debug/trigerror --filters ""
 
-dev4: build
+dev-school: build
   target/debug/trigerror --interfaces "wlan0"
+
+dev-home: build
+  target/debug/trigerror --interfaces "enp0s13f0u3u2i5"
