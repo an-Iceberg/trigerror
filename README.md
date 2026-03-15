@@ -16,6 +16,8 @@
 - NOTE: param prio: 1. time 2. memory size 3. packet count\
   if no more memory, trim start of error
 - TODO: consider some logging library: https://docs.rs/log/latest/log/
+- TODO: filters need to be handled cleanly and options need to be defined clearly.
+- TODO: `RingBuffer` and `Trigerror` could be singletons.
 
 ## Useful resources
 - https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page
@@ -26,3 +28,5 @@
 - https://rust-cli.github.io/book/index.html
 - https://stackoverflow.com/questions/28823788/how-do-i-clear-the-current-line-of-stdout
 - https://stackoverflow.com/questions/2388090/how-to-delete-and-replace-last-line-in-the-terminal-using-bash
+- https://stackoverflow.com/questions/1953300/how-to-send-pcap-file-packets-on-nic
+- https://en.wikipedia.org/wiki/EtherType#Values

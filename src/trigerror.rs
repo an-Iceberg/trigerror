@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use pcap::{Activated, Active, Capture, Packet};
 use ratatui::style::Stylize;
 use ini::ini;
 use crate::{cli::CLI, constants::{
@@ -8,9 +9,9 @@ use crate::{cli::CLI, constants::{
   DEFAULT_RETRIGGER,
   DEFAULT_TIME_AFTER,
   DEFAULT_TIME_BEFORE
-}};
+}, ring_buffer::RingBuffer};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Trigerror
 {
   /// The interface(s), from which packets should be read.
@@ -22,7 +23,7 @@ pub struct Trigerror
   /// Only record these additional protocols.
   /// If empty list, then record no additional protocols.
   /// If None, record everything.
-  pub filters: Option<Vec<String>>,
+  pub filters: Option<String>,
   /// How many packets before the error should be recorded.
   pub count_before: u32,
   /// How many packets after the error should be recorded.
@@ -117,11 +118,7 @@ impl Trigerror
 
     if let Some(Some(filters)) = default.get("filters")
     {
-      trigerror.filters = Some(filters
-        .split(",")
-        .map(|protocol| protocol.trim().to_string())
-        .collect()
-      );
+      trigerror.filters = Some(filters.to_owned());
     }
 
     if let Some(count_before) = default.get("count_before")
@@ -190,14 +187,7 @@ impl Trigerror
     {
       // This way one can reset the filters to `None` thru the CLI.
       if filters.is_empty() { self.filters = None; }
-      else
-      {
-        self.filters = Some(filters
-          .split(",")
-          .map(|filter| filter.trim().to_string())
-          .collect()
-        );
-      }
+      else { self.filters = Some(filters.to_owned()); }
     }
 
     if let Some(count_before) = cli.count_before
