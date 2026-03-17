@@ -9,6 +9,7 @@ keywords = ["packet", "packets", "networking", "error", "ptp", "gptp"]
 description = "Utility for recording packet traffic upon encountering an error in a packet."
 
 [dependencies]
+chrono = "0.4.44"
 clap = { version = "4.5.60", features = ["derive"] }
 colored = "3.1.1"
 hashbrown = "0.16.1"

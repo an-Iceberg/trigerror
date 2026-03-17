@@ -29,4 +29,6 @@
 - https://stackoverflow.com/questions/28823788/how-do-i-clear-the-current-line-of-stdout
 - https://stackoverflow.com/questions/2388090/how-to-delete-and-replace-last-line-in-the-terminal-using-bash
 - https://stackoverflow.com/questions/1953300/how-to-send-pcap-file-packets-on-nic
-- https://en.wikipedia.org/wiki/EtherType#Values
+- [EtherType](https://en.wikipedia.org/wiki/EtherType#Values)
+- [write to file](https://www.reddit.com/r/learnrust/comments/ggge3j/what_is_the_proper_way_in_rust_of_writing_into_a/)
+- [pcap file format](https://www.endace.com/learn/what-is-a-pcap-file)

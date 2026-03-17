@@ -10,7 +10,7 @@ pub struct Packet
   pub data: Vec<u8>, // Formerly Box<[u8]>
 }
 
-pub struct Codec {}
+pub struct Codec;
 
 impl PacketCodec for Codec
 {

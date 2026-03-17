@@ -3,12 +3,7 @@ use pcap::{Activated, Active, Capture, Packet};
 use ratatui::style::Stylize;
 use ini::ini;
 use crate::{cli::CLI, constants::{
-  DEFAULT_COUNT_AFTER,
-  DEFAULT_COUNT_BEFORE,
-  DEFAULT_MAX_RETRIGGERS,
-  DEFAULT_RETRIGGER,
-  DEFAULT_TIME_AFTER,
-  DEFAULT_TIME_BEFORE
+  DEFAULT_COUNT_AFTER, DEFAULT_COUNT_BEFORE, DEFAULT_FILE_SIZE, DEFAULT_MAX_RETRIGGERS, DEFAULT_RETRIGGER, DEFAULT_TIME_AFTER, DEFAULT_TIME_BEFORE
 }, ring_buffer::RingBuffer};
 
 #[derive(Debug)]
@@ -32,6 +27,8 @@ pub struct Trigerror
   pub time_before: u32,
   /// How many milliseconds after the error should the recording stop.
   pub time_after: u32,
+  /// How large in MB the size should be.
+  pub file_size: u32,
   /// If true and if errors happens after our initial error then the counter and timer get reset.
   pub retrigger: bool,
   /// The maximum amount of errors that should be recorded.
@@ -52,6 +49,7 @@ impl Default for Trigerror
       count_after: DEFAULT_COUNT_AFTER,
       time_before: DEFAULT_TIME_BEFORE,
       time_after: DEFAULT_TIME_AFTER,
+      file_size: DEFAULT_FILE_SIZE,
       retrigger: DEFAULT_RETRIGGER,
       max_retriggers: DEFAULT_MAX_RETRIGGERS,
     };
