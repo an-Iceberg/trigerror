@@ -20,15 +20,19 @@
 - TODO: `RingBuffer` and `Trigerror` could be singletons.
 
 ## Useful resources
-- https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page
-- https://en.wikipedia.org/wiki/Precision_Time_Protocol
-- https://crates.io/crates/statime
-- https://docs.rs/dirs/latest/dirs/fn.config_dir.html
-- https://docs.rs/rpcap/latest/rpcap/
-- https://rust-cli.github.io/book/index.html
+- [gPTP from ZHAW](https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page)
+- [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
+- [Rust crate implementing PTP](https://crates.io/crates/statime)
+- [config directory in OS](https://docs.rs/dirs/latest/dirs/fn.config_dir.html)
+- [Rust `pcap` crate](https://docs.rs/rpcap/latest/rpcap/)
+- [Rust `cli` help](https://rust-cli.github.io/book/index.html)
 - https://stackoverflow.com/questions/28823788/how-do-i-clear-the-current-line-of-stdout
 - https://stackoverflow.com/questions/2388090/how-to-delete-and-replace-last-line-in-the-terminal-using-bash
 - https://stackoverflow.com/questions/1953300/how-to-send-pcap-file-packets-on-nic
 - [EtherType](https://en.wikipedia.org/wiki/EtherType#Values)
 - [write to file](https://www.reddit.com/r/learnrust/comments/ggge3j/what_is_the_proper_way_in_rust_of_writing_into_a/)
 - [pcap file format](https://www.endace.com/learn/what-is-a-pcap-file)
+- [UNIX epoch converter](https://www.epochconverter.com/)
+
+## References
+- [`timeval` `struct` fields meaning](https://man7.org/linux/man-pages/man3/timeval.3type.html)

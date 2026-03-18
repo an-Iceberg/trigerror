@@ -1,5 +1,8 @@
+use std::time::Duration;
+
 use pcap::{PacketCodec, PacketHeader};
-use crate::{bytes_to_u16, eth_frame::EthFrame};
+use pcap_file::pcap::PcapPacket;
+use crate::{bytes_to_u16, eth_frame::EthFrame, timeval_to_i64};
 
 // TODO: extract an ethernet frame from this.
 /// Represents a captured packet.
@@ -28,7 +31,16 @@ impl PacketCodec for Codec
 
 impl Packet
 {
-  pub fn to_eth_frame(&mut self) -> EthFrame
+  pub fn to_pcap_packet(&self) -> PcapPacket
+  {
+    return PcapPacket::new(
+      Duration::from_secs_f64(timeval_to_i64(self.header.ts)),
+      self.header.caplen,
+      &self.data
+    );
+  }
+
+  pub fn to_eth_frame(&self) -> EthFrame
   {
     return EthFrame
     {

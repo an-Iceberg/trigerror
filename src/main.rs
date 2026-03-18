@@ -1,10 +1,11 @@
-use std::{env, ffi::OsStr, fs::{self, File, read_dir}, io::{BufWriter, Write}, ops::Deref, path::PathBuf, process::exit, time::SystemTime};
+use std::{env, ffi::OsStr, fs::{self, File, read_dir}, io::{BufWriter, Write}, ops::Deref, path::PathBuf, process::exit, time::{Duration, SystemTime}};
 
 use chrono::{DateTime, Utc};
 use clap::Parser;
 use pcap::{Capture, Device, Packet, PacketCodec};
+use pcap_file::pcap::{PcapPacket, PcapWriter};
 use ratatui::crossterm::style::Stylize;
-use trigerror::{bytes_to_u16, cli::CLI, get_ether_type, packet::Codec, ring_buffer::{self, RingBuffer}, trigerror::Trigerror};
+use trigerror::{bytes_to_u16, cli::CLI, get_ether_type, packet::Codec, ring_buffer::{self, RingBuffer}, timeval_to_i64, trigerror::Trigerror};
 
 fn main()
 {
@@ -45,6 +46,7 @@ fn main()
   let mut trigerror = Trigerror::configure_from_ini(PathBuf::from("trigerror.ini"));
   trigerror.configure_from_cli(CLI::parse());
 
+  // TODO: move these into trigerror mod.
   let devices = match Device::list()
   {
     Ok(devs) =>
@@ -166,63 +168,104 @@ fn main()
   // }).unwrap();
   // println!(" Done.");
 
-  // Another approach
-  let mut triggered = false;
-  let mut count = 0;
-  let mut pre_buffer = RingBuffer::new(20, trigerror.time_before);
-  let mut post_buffer = vec![];
-  for packet in capture.iter(Codec)
-  {
-    let packet = packet.unwrap();
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    if !triggered
-    {
-      pre_buffer.push(packet);
-    }
-    else
-    {
-      post_buffer.push(packet);
-    }
+  // // Another approach
+  // let mut triggered = false;
+  // let mut count = 0;
+  // let mut pre_buffer = RingBuffer::new(20, trigerror.time_before);
+  // let mut post_buffer: Vec<Packet> = vec![];
+  // for packet in capture.iter(Codec)
+  // {
+  //   let packet = packet.unwrap();
 
-    count += 1;
-    if count >= 50 { triggered = true; }
-    if count >= 100 { break; }
-  }
-  println!("pre_buffer ({}):", pre_buffer.len());
-  for packet in pre_buffer.drain()
+  //   if !triggered
+  //   {
+  //     pre_buffer.push(packet);
+  //   }
+  //   else
+  //   {
+  //     post_buffer.push(packet);
+  //   }
+
+  //   count += 1;
+  //   if count >= 50 { triggered = true; }
+  //   if count >= 100 { break; }
+  // }
+  // println!("pre_buffer ({}):", pre_buffer.len());
+  // for packet in pre_buffer.drain()
+  // {
+  //   print!("{}, ", get_ether_type(bytes_to_u16(packet.data[12], packet.data[13])));
+  // }
+  // println!();
+  // println!("post_buffer ({}):", post_buffer.len());
+  // for packet in &post_buffer
+  // {
+  //   print!("{}, ", get_ether_type(bytes_to_u16(packet.data[12], packet.data[13])));
+  // }
+  // println!();
+
+  // let system_time = SystemTime::now();
+  // let datetime: DateTime<Utc> = system_time.into();
+  // let time_string = datetime.format("%Y-%m-%d_%H:%M:%S").to_string();
+  // let first_interface = trigerror.interfaces.first().unwrap();
+
+  // let outfile = File::create(format!("trigerror_{first_interface}_{time_string}.pcap")).expect("couldn't create file");
+  // let mut pcap_writer = PcapWriter::new(outfile).expect("Error writing file");
+  // // Writing the pre_buffer to the file
+  // for packet in pre_buffer.drain()
+  // { pcap_writer.write_packet(&packet.to_pcap_packet()).unwrap(); }
+  // // Writing the post_buffer to the file
+  // for packet in post_buffer
+  // { pcap_writer.write_packet(&packet.to_pcap_packet()).unwrap(); }
+
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  let mut counter = 0;
+  let mut buffer = vec![];
+  while let Ok(packet) = capture.next_packet()
   {
+    let packet = PcapPacket::new_owned(
+      // NOTE: this might be wrong
+      Duration::from_secs_f64(timeval_to_i64(packet.header.ts)),
+      packet.header.caplen,
+      packet.data.into()
+    );
     print!("{}, ", get_ether_type(bytes_to_u16(packet.data[12], packet.data[13])));
+    buffer.push(packet);
+    counter += 1;
+    if counter > 50 { break; }
   }
-  println!();
-  println!("post_buffer ({}):", post_buffer.len());
-  for packet in &post_buffer
-  {
-    print!("{}, ", get_ether_type(bytes_to_u16(packet.data[12], packet.data[13])));
-  }
-  println!();
 
   let system_time = SystemTime::now();
   let datetime: DateTime<Utc> = system_time.into();
   let time_string = datetime.format("%Y-%m-%d_%H:%M:%S").to_string();
+  let first_interface = trigerror.interfaces.first().unwrap();
 
-  let outfile = File::create(format!("trigerror_{time_string}.pcap")).expect("couldn't create file");
-  let mut writer = BufWriter::new(&outfile);
+  let outfile = File::create(format!("trigerror_{first_interface}_{time_string}.pcap")).expect("couldn't create file");
+  let mut pcap_writer = PcapWriter::new(outfile).expect("Error writing file");
+  for packet in buffer
+  { pcap_writer.write_packet(&packet).unwrap(); }
 
-  println!();
-  // Write single packet to console.
-  for byte in &pre_buffer.drain().first().unwrap().data
-  { print!("{:02x} ", byte); }
-  // Write pre buffer to file.
-  for packet in pre_buffer.drain()
-  { writer.write_all(&packet.data).unwrap(); }
-  // Write post buffer to file
-  for packet in &post_buffer
-  { writer.write_all(&packet.data).unwrap(); }
-  println!();
-  println!();
-  // Write last packet to console.
-  for byte in &post_buffer.last().unwrap().data
-  { print!("{:02x} ", byte); }
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  // let mut writer = BufWriter::new(&outfile);
+
+  // println!();
+  // // Write single packet to console.
+  // for byte in &pre_buffer.drain().first().unwrap().data
+  // { print!("{:02x} ", byte); }
+  // // Write pre buffer to file.
+  // for packet in pre_buffer.drain()
+  // { writer.write_all(&packet.data).unwrap(); }
+  // // Write post buffer to file
+  // for packet in &post_buffer
+  // { writer.write_all(&packet.data).unwrap(); }
+  // println!();
+  // println!();
+  // // Write last packet to console.
+  // for byte in &post_buffer.last().unwrap().data
+  // { print!("{:02x} ", byte); }
 
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

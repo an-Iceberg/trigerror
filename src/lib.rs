@@ -9,6 +9,14 @@ pub mod packet;
 pub mod ring_buffer;
 pub mod eth_frame;
 
+use libc::timeval;
+
+pub fn timeval_to_i64(timeval: timeval) -> f64
+{
+  let μ = 1e-6;
+  return timeval.tv_sec as f64 + (μ * timeval.tv_usec as f64);
+}
+
 /// Extracting the ether type as a u16 number by right shifting the values.
 /// [source](https://stackoverflow.com/questions/50243866/how-do-i-convert-two-u8-primitives-into-a-u16-primitive#answer-50244328)
 pub fn bytes_to_u16(first_byte: u8, second_byte: u8) -> u16
