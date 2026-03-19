@@ -10,6 +10,8 @@ use clap::Parser;
 )]
 pub struct CLI
 {
+  // TODO: add option to write default config file to cwd.
+
   /// The file which is used to configure trigerror. If this option is given then
   /// all other configurations thru the CLI will be ignored.
   #[arg(long, short = 'o')]

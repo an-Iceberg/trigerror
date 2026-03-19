@@ -1,20 +1,31 @@
 #![allow(clippy::needless_return)]
 #![allow(mixed_script_confusables)]
 
-pub mod gptp;
 pub mod cli;
-pub mod trigerror;
+pub mod config;
 pub mod constants;
-pub mod packet;
-pub mod ring_buffer;
 pub mod eth_frame;
+pub mod gptp;
+pub mod packet;
+pub mod protocol;
+pub mod recording;
+pub mod ring_buffer;
 
+use std::time::SystemTime;
+use chrono::{DateTime, Utc};
 use libc::timeval;
 
 pub fn timeval_to_i64(timeval: timeval) -> f64
 {
   let μ = 1e-6;
   return timeval.tv_sec as f64 + (μ * timeval.tv_usec as f64);
+}
+
+pub fn get_timestamp() -> String
+{
+  let system_time = SystemTime::now();
+  let datetime: DateTime<Utc> = system_time.into();
+  return datetime.format("%Y-%m-%d_%H:%M:%S").to_string();
 }
 
 /// Extracting the ether type as a u16 number by right shifting the values.

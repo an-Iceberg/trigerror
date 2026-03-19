@@ -4,11 +4,15 @@ use chrono::{DateTime, Utc};
 use clap::Parser;
 use pcap::{Capture, Device, Packet, PacketCodec};
 use pcap_file::pcap::{PcapPacket, PcapWriter};
-use ratatui::crossterm::style::Stylize;
-use trigerror::{bytes_to_u16, cli::CLI, get_ether_type, packet::Codec, ring_buffer::{self, RingBuffer}, timeval_to_i64, trigerror::Trigerror};
+use colored::Colorize;
+use trigerror::{bytes_to_u16, cli::CLI, get_ether_type, packet::Codec, ring_buffer::{self, RingBuffer}, timeval_to_i64, recording::Recording};
 
 fn main()
 {
+  // Check if config file is given in CLI.
+
+  // For each interface given, create a recording.
+
   // Check if `trigerror.ini` file exists in the `cwd`.
   // let cwd = match env::current_dir()
   // {
@@ -43,7 +47,7 @@ fn main()
   //   .map(|path| path.file_name())
   //   .any(|file| file == OsStr::new("trigerror.ini"));
 
-  let mut trigerror = Trigerror::configure_from_ini(PathBuf::from("trigerror.ini"));
+  let mut trigerror = Recording::configure_from_ini(PathBuf::from("trigerror.ini"));
   trigerror.configure_from_cli(CLI::parse());
 
   // TODO: move these into trigerror mod.

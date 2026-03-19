@@ -1,5 +1,4 @@
 use std::time::Duration;
-
 use pcap::{PacketCodec, PacketHeader};
 use pcap_file::pcap::PcapPacket;
 use crate::{bytes_to_u16, eth_frame::EthFrame, timeval_to_i64};

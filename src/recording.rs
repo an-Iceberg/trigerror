@@ -1,16 +1,26 @@
-use std::path::PathBuf;
-use pcap::{Activated, Active, Capture, Packet};
-use ratatui::style::Stylize;
+use std::{collections::VecDeque, fs::File, path::PathBuf, process::exit, time::Duration};
+use pcap::{Activated, Active, Capture, Device, Error, Inactive, Packet};
+use colored::Colorize;
 use ini::ini;
-use crate::{cli::CLI, constants::{
-  DEFAULT_COUNT_AFTER, DEFAULT_COUNT_BEFORE, DEFAULT_FILE_SIZE, DEFAULT_MAX_RETRIGGERS, DEFAULT_RETRIGGER, DEFAULT_TIME_AFTER, DEFAULT_TIME_BEFORE
-}, ring_buffer::RingBuffer};
+use pcap_file::pcap::{PcapPacket, PcapWriter};
+use crate::{cli::CLI, config::Config, constants::{
+  DEFAULT_COUNT_AFTER,
+  DEFAULT_COUNT_BEFORE,
+  DEFAULT_FILE_SIZE,
+  DEFAULT_MAX_RETRIGGERS,
+  DEFAULT_RETRIGGER,
+  DEFAULT_TIME_AFTER,
+  DEFAULT_TIME_BEFORE,
+}, get_timestamp, ring_buffer::RingBuffer, timeval_to_i64};
 
-#[derive(Debug)]
-pub struct Trigerror
+pub struct Recording
 {
   // TODO: one struct has one interface and has one file path.
   // each provided interface creates its own struct.
+
+  pub(crate) config: Config,
+  capture: Capture<Active>,
+  buffer: Vec<PcapPacket<'static>>,
 
   /// The interface(s), from which packets should be read.
   pub interfaces: Vec<String>,
@@ -38,12 +48,16 @@ pub struct Trigerror
   pub max_retriggers: u32,
 }
 
-impl Default for Trigerror
+// FIX: it might not be a good idea to impl Default for Recording.
+impl Default for Recording
 {
   fn default() -> Self
   {
     return Self
     {
+      config: Config::default(),
+      capture: Device::lookup().unwrap().unwrap().open().unwrap(),
+      buffer: vec![],
       interfaces: Vec::default(),
       filters: None,
       capture_files_path: PathBuf::from("."),
@@ -59,19 +73,143 @@ impl Default for Trigerror
   }
 }
 
-impl Trigerror
+impl Recording
 {
   pub fn new() -> Self { return Self::default(); }
 
-  pub fn configure_from_ini(path: PathBuf) -> Trigerror
+  pub fn setup(&mut self)
   {
-    let mut trigerror = Trigerror::new();
+    let devices = match Device::list()
+    {
+      Ok(devs) =>
+      {
+        println!("[ {} ] listed devices", "OK".green());
+        devs
+      }
+      Err(error) =>
+      {
+        println!("[ {} ] couldn't list devices b/c: {}", "ERROR".red(), error);
+        exit(-1);
+      }
+    };
+
+    let device = match devices
+      .iter()
+      .find(|device| device.name.contains(self.config.interface.as_str()))
+    {
+      Some(first_device) =>
+      {
+        println!("[ {} ] device {} found", "OK".green(), first_device.name);
+        first_device.to_owned()
+      }
+      None =>
+      {
+        println!(
+          "[ {} ] device {} not found in device list. Available devices are: {:?}",
+          "ERROR".red(),
+          self.config.interface,
+          devices.iter().map(|device| device.name.to_owned()).collect::<Vec<String>>(),
+        );
+        exit(-1);
+      }
+    };
+
+    let capture_inactive = match Capture::from_device(device)
+    {
+      Ok(cap) =>
+      {
+        println!("[ {} ] created capture device", "OK".green());
+        // TODO: adjust these parameters
+        cap.promisc(true)
+          .immediate_mode(true)
+          // .snaplen(5_000)
+      }
+      Err(error) =>
+      {
+        println!("[ {} ] couldn't create capture device b/c: {}", "ERROR".red(), error);
+        exit(-1);
+      }
+    };
+
+    self.capture = match capture_inactive.open()
+    {
+      Ok(cap) =>
+      {
+        println!("[ {} ] opened capture device", "OK".green());
+        cap
+      }
+      Err(error) =>
+      {
+        println!("[ {} ] couldn't open capture device b/c: {}", "ERROR".red(), error);
+        exit(-1);
+      }
+    };
+
+    match self.capture.filter(&self.config.filters, true)
+    {
+      Ok(_) => println!("[ {} ] filters set and compiled", "OK".green()),
+      Err(error) =>
+      {
+        println!("[ {} ] couldn't set filters b/c: {}", "ERROR".red(), error);
+        exit(-1);
+      }
+    }
+  }
+
+  // pub fn start(&mut self)
+  // {
+  //   while let Ok(packet) = self.capture.next_packet()
+  //   {
+  //     let packet = PcapPacket::new_owned(
+  //       Duration::from_secs_f64(timeval_to_i64(packet.header.ts)),
+  //       packet.header.caplen,
+  //       packet.data.into()
+  //     );
+  //   }
+  // }
+
+  // FIX: static lifetime may cause the heap to become massively bloated b/c it makes an object live for the
+  // FIX: entire duration of the program's lifetime. Either clear the buffers surely or use a different lifetime
+  // FIX: specifier.
+  pub fn give_packet(&mut self) -> Result<PcapPacket<'static>, Error>
+  {
+    return match self.capture.next_packet()
+    {
+      Ok(packet) =>
+      {
+        let packet = PcapPacket::new_owned(
+          Duration::from_secs_f64(timeval_to_i64(packet.header.ts)),
+          packet.header.caplen,
+          packet.data.into()
+        );
+        // NOTE: this might be inefficient.
+        // self.buffer.push(packet.clone());
+        Ok(packet)
+      }
+      Err(error) => Err(error),
+    };
+  }
+
+  pub fn push_packet(mut self, packet: PcapPacket<'static>)
+  { self.buffer.push(packet); }
+
+  pub fn trigger(&mut self, timestamp: String)
+  {
+    let interface = self.config.interface.to_string().to_string().to_string();
+    let outfile = File::create(format!("trigerror_{interface}_{timestamp}.pcap")).expect("couldn't create file");
+    let mut pcap_writer = PcapWriter::new(outfile).expect("Error writing file");
+    self.buffer.iter().for_each(|packet| { pcap_writer.write_packet(packet).unwrap(); } );
+    self.buffer.clear();
+  }
+
+  pub fn configure_from_ini(path: PathBuf) -> Recording
+  {
+    let mut trigerror = Recording::new();
 
     let config = match ini!(safe path.to_str().unwrap())
     {
       Ok(config) =>
       {
-        // BUG: why does this not print the OK in green⁈
         println!("[ {} ] found config file @ {}", "OK".green(), path.to_str().unwrap());
         config.to_owned()
       }
@@ -160,7 +298,8 @@ impl Trigerror
     if let Some(config_file) = cli.config_file_location
     {
       println!("[ {} ] config file location given; configuring from said file", "INFO".cyan());
-      *self = Trigerror::configure_from_ini(config_file);
+      *self = Recording::configure_from_ini(config_file);
+      return;
     }
 
     // Configuring interfaces thru CLI
