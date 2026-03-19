@@ -9,6 +9,9 @@ use crate::{cli::CLI, constants::{
 #[derive(Debug)]
 pub struct Trigerror
 {
+  // TODO: one struct has one interface and has one file path.
+  // each provided interface creates its own struct.
+
   /// The interface(s), from which packets should be read.
   pub interfaces: Vec<String>,
   /// These are the protocols that trigger a capture when an error happens in them.

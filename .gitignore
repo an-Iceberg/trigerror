@@ -26,3 +26,5 @@ target
 # Any `.pcap` files. They are produced as tests and are different for each run of the app.
 *.pcap
 *.pcapng
+!/example_scenarios/*.pcap
+!/example_scenarios/*.pcapng

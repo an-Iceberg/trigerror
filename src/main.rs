@@ -223,10 +223,17 @@ fn main()
 
   let mut counter = 0;
   let mut buffer = vec![];
+
+  let system_time = SystemTime::now();
+  let datetime: DateTime<Utc> = system_time.into();
+  // This is approximately when the capturing has started.
+  // TODO: this should be the timestamp when the first trigger happens.
+  let time_string = datetime.format("%Y-%m-%d_%H:%M:%S").to_string();
+
   while let Ok(packet) = capture.next_packet()
   {
     let packet = PcapPacket::new_owned(
-      // NOTE: this might be wrong
+      // NOTE: this needs confirmation that it's correct.
       Duration::from_secs_f64(timeval_to_i64(packet.header.ts)),
       packet.header.caplen,
       packet.data.into()
@@ -237,15 +244,14 @@ fn main()
     if counter > 50 { break; }
   }
 
-  let system_time = SystemTime::now();
-  let datetime: DateTime<Utc> = system_time.into();
-  let time_string = datetime.format("%Y-%m-%d_%H:%M:%S").to_string();
   let first_interface = trigerror.interfaces.first().unwrap();
 
   let outfile = File::create(format!("trigerror_{first_interface}_{time_string}.pcap")).expect("couldn't create file");
   let mut pcap_writer = PcapWriter::new(outfile).expect("Error writing file");
   for packet in buffer
   { pcap_writer.write_packet(&packet).unwrap(); }
+
+  // TODO: once one file is done, don't exit program, but listen to next error.
 
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
