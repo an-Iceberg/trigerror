@@ -20,6 +20,7 @@
 - TODO: `RingBuffer` and `Trigerror` could be singletons.
 - TODO: link to dependencies
 - TODO: abstract auch noch mehrwert und was dabei rauskam (wichtigsten ergebnisse)
+- TODO: create an additional file for each recording detailing which packets are faulty and what is faulty about them.
 
 ## Useful resources
 - [gPTP from ZHAW](https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page)

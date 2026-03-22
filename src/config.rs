@@ -11,7 +11,8 @@ use crate::{cli::CLI, constants::{
 use colored::Colorize;
 use ini::ini;
 
-#[derive(Debug)]
+/// The configuration parameters for a recording.
+#[derive(Debug, Clone)]
 pub struct Config
 {
   /// The interface(s), from which packets should be read.
@@ -19,11 +20,9 @@ pub struct Config
   /// These are the protocols that trigger a capture when an error happens in them.
   pub protocols: Vec<String>,
   /// Path where the captured data is stored as a `.pcap` file.
-  pub capture_files_path: PathBuf,
-  /// Only record these additional protocols.
-  /// If empty list, then record no additional protocols.
-  /// If None, record everything.
-  pub filters: String,
+  pub out_dir: PathBuf,
+  /// The [BPF](https://biot.com/capstats/bpf.html) applied to the capture device.
+  pub filter: String,
   /// How many packets before the error should be recorded.
   pub count_before: u32,
   /// How many packets after the error should be recorded.
@@ -47,8 +46,8 @@ impl Default for Config
     return Self
     {
       interface: "eth0".to_string(),
-      filters: "".to_string(),
-      capture_files_path: PathBuf::from("."),
+      filter: "".to_string(),
+      out_dir: PathBuf::from("."),
       protocols: Vec::default(),
       count_before: DEFAULT_COUNT_BEFORE,
       count_after: DEFAULT_COUNT_AFTER,
@@ -65,13 +64,144 @@ impl Config
 {
   pub fn new() -> Self { return Self::default(); }
 
-  pub fn set_from_ini(&mut self, path: PathBuf)
+  pub fn set_from_ini(&mut self, path: PathBuf) -> Option<Vec<String>>
   {
+    let config = match ini!(safe path.to_str().unwrap())
+    {
+      Ok(config) =>
+      {
+        println!("[ {} ] found config file @ {}", "OK".green(), path.to_str().unwrap());
+        config.to_owned()
+      }
+      Err(error) =>
+      {
+        println!("[ {} ] didn't find config file b/c: {}", "ERROR".red(), error);
+        println!("[ {} ] falling back to default configurations", "INFO".cyan());
+        return None;
+      }
+    };
 
+    let default = match config.get("default")
+    {
+      Some(default) =>
+      {
+        println!("[ {} ] found config(s)", "OK".green());
+        default.to_owned()
+      }
+      None =>
+      {
+        println!("[ {} ] no configs in file", "ERROR".red());
+        println!("[ {} ] falling back to default configurations", "INFO".cyan());
+        return None;
+      }
+    };
+
+    // NOTE: if you're bored you can add log messages to all these.
+
+    let mut interfaces = vec![];
+
+    if let Some(Some(ifaces)) = default.get("interfaces")
+    {
+      interfaces = ifaces
+        .split(",")
+        .map(|interface| interface.trim().to_string())
+        .collect();
+    }
+
+    // TODO: out_dir
+
+    if let Some(Some(protocols)) = default.get("protocols")
+    {
+      self.protocols = protocols
+        .split(",")
+        .map(|protocol| protocol.trim().to_string())
+        .collect();
+    }
+
+    if let Some(Some(filter)) = default.get("filters")
+    { self.filter = filter.to_owned(); }
+
+    if let Some(count_before) = default.get("count_before")
+      .and_then(|count_before| count_before.as_ref())
+      .and_then(|count_before| count_before.parse::<u32>().ok())
+    { self.count_before = count_before; }
+
+    if let Some(count_after) = default.get("count_after")
+      .and_then(|count_after| count_after.as_ref())
+      .and_then(|count_after| count_after.parse::<u32>().ok())
+    { self.count_after = count_after; }
+
+    if let Some(time_before) = default.get("time_before")
+      .and_then(|time_before| time_before.as_ref())
+      .and_then(|time_before| time_before.parse::<u32>().ok())
+    { self.time_before = time_before; }
+
+    if let Some(time_after) = default.get("time_after")
+      .and_then(|time_after| time_after.as_ref())
+      .and_then(|time_after| time_after.parse::<u32>().ok())
+    { self.time_after = time_after; }
+
+    if let Some(retrigger) = default.get("retrigger")
+      .and_then(|retrigger| retrigger.as_ref())
+      .and_then(|retrigger| retrigger.parse::<bool>().ok())
+    { self.retrigger = retrigger; }
+
+    if let Some(max_retriggers) = default.get("max_retriggers")
+      .and_then(|max_retriggers| max_retriggers.as_ref())
+      .and_then(|max_retriggers| max_retriggers.parse::<u32>().ok())
+    { self.max_retriggers = max_retriggers; }
+
+    if !interfaces.is_empty() { return Some(interfaces); }
+    else { return None; }
   }
 
-  pub fn set_from_cli(&mut self, cli: CLI)
+  pub fn set_from_cli(&mut self, cli: CLI) -> Option<Vec<String>>
   {
+    let mut interfaces = vec![];
 
+    // Configuring interfaces thru CLI
+    if let Some(ifaces) = cli.interfaces
+    {
+      interfaces = ifaces
+        .split(",")
+        .map(|interface| interface.trim().to_string())
+        .collect();
+    }
+
+    // Configuring protocols thru CLI
+    if let Some(protocols) = cli.protocols
+    {
+      self.protocols = protocols
+        .split(",")
+        .map(|protocol| protocol.trim().to_string())
+        .collect();
+    }
+
+    if let Some(out_dir) = cli.out_dir
+    { self.out_dir = out_dir; }
+
+    if let Some(filter) = cli.filter
+    { self.filter = filter; }
+
+    if let Some(count_before) = cli.count_before
+    { self.count_before = count_before; }
+
+    if let Some(count_after) = cli.count_after
+    { self.count_after = count_after; }
+
+    if let Some(time_before) = cli.time_before
+    { self.time_before = time_before; }
+
+    if let Some(time_after) = cli.time_after
+    { self.time_after = time_after; }
+
+    if let Some(retrigger) = cli.retrigger
+    { self.retrigger = retrigger; }
+
+    if let Some(max_retriggers) = cli.max_retriggers
+    { self.max_retriggers = max_retriggers; }
+
+    if !interfaces.is_empty() { return Some(interfaces); }
+    else { return None; }
   }
 }

@@ -31,14 +31,14 @@ pub struct CLI
 
   /// The place in the file system, where the `.pcap` file should be written to.
   /// The default directory is the `cwd`.
-  #[arg(long, short = 'a')]
-  pub capture_files_path: Option<PathBuf>,
+  #[arg(long)]
+  pub out_dir: Option<PathBuf>,
 
   // TODO: turn this into just a String and parse it into a Vec later.
   /// Only these protocols shall be recorded.
   /// This argument is parsed as a String and gets split into a list later on.
   #[arg(long, short = 'f')]
-  pub filters: Option<String>,
+  pub filter: Option<String>,
 
   /// How many packets before the error should be recorded.
   #[arg(long)]

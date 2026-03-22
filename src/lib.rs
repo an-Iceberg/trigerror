@@ -10,10 +10,31 @@ pub mod packet;
 pub mod protocol;
 pub mod recording;
 pub mod ring_buffer;
+pub mod protocols;
+pub mod writer;
 
-use std::time::SystemTime;
+use std::{process::exit, time::{Duration, SystemTime}};
 use chrono::{DateTime, Utc};
 use libc::timeval;
+use pcap::{Active, Capture, Device, Packet};
+use pcap_file::pcap::PcapPacket;
+use colored::Colorize;
+
+use crate::config::Config;
+
+pub trait Protocol
+{
+  fn validate_packet(&mut self, packet: &PcapPacket) -> Result<(), String>;
+}
+
+pub fn pac2pac(packet: Packet) -> PcapPacket<'static>
+{
+  return  PcapPacket::new_owned(
+    Duration::from_secs_f64(timeval_to_i64(packet.header.ts)),
+    packet.header.caplen,
+    packet.data.into()
+  )
+}
 
 pub fn timeval_to_i64(timeval: timeval) -> f64
 {
@@ -25,13 +46,94 @@ pub fn get_timestamp() -> String
 {
   let system_time = SystemTime::now();
   let datetime: DateTime<Utc> = system_time.into();
-  return datetime.format("%Y-%m-%d_%H:%M:%S").to_string();
+  return datetime.format("%Y-%m-%d_%T.%.5f").to_string();
 }
 
 /// Extracting the ether type as a u16 number by right shifting the values.
 /// [source](https://stackoverflow.com/questions/50243866/how-do-i-convert-two-u8-primitives-into-a-u16-primitive#answer-50244328)
 pub fn bytes_to_u16(first_byte: u8, second_byte: u8) -> u16
 { return ((first_byte as u16) << 8) | second_byte as u16; }
+
+pub fn create_capture_device(config: &Config) -> Capture<Active>
+{
+  let devices = match Device::list()
+  {
+    Ok(devs) =>
+    {
+      println!("[ {} ] listed devices", "OK".green());
+      devs
+    }
+    Err(error) =>
+    {
+      println!("[ {} ] couldn't list devices b/c: {}", "ERROR".red(), error);
+      exit(-1);
+    }
+  };
+
+  let device = match devices
+    .iter()
+    .find(|device| device.name.contains(config.interface.as_str()))
+  {
+    Some(first_device) =>
+    {
+      println!("[ {} ] device {} found", "OK".green(), first_device.name);
+      first_device.to_owned()
+    }
+    None =>
+    {
+      println!(
+        "[ {} ] device {} not found in device list. Available devices are: {:?}",
+        "ERROR".red(),
+        config.interface,
+        devices.iter().map(|device| device.name.to_owned()).collect::<Vec<String>>(),
+      );
+      exit(-1);
+    }
+  };
+
+  let capture_inactive = match Capture::from_device(device)
+  {
+    Ok(cap) =>
+    {
+      println!("[ {} ] created capture device", "OK".green());
+      // TODO: adjust these parameters
+      cap.promisc(true)
+        .immediate_mode(true)
+        // .snaplen(5_000)
+    }
+    Err(error) =>
+    {
+      println!("[ {} ] couldn't create capture device b/c: {}", "ERROR".red(), error);
+      exit(-1);
+    }
+  };
+
+  let mut capture = match capture_inactive.open()
+  {
+    Ok(cap) =>
+    {
+      println!("[ {} ] opened capture device", "OK".green());
+      cap
+    }
+    Err(error) =>
+    {
+      println!("[ {} ] couldn't open capture device b/c: {}", "ERROR".red(), error);
+      exit(-1);
+    }
+  };
+
+  match capture.filter(config.filter.as_str(), true)
+  {
+    Ok(_) => println!("[ {} ] filters set and compiled", "OK".green()),
+    Err(error) =>
+    {
+      println!("[ {} ] couldn't set filters b/c: {}", "ERROR".red(), error);
+      exit(-1);
+    }
+  }
+
+  return capture;
+}
 
 pub fn get_ether_type(byte: u16) -> String
 {
@@ -82,7 +184,7 @@ pub fn get_ether_type(byte: u16) -> String
     0x88e3 => "Media Redundancy Protocol".to_string(),
     0x88e5 => "MACsec".to_string(),
     0x88e7 => "PBB".to_string(),
-    0x88f7 => "PTP (this is our thingy)".to_string(),
+    0x88f7 => "PTP".to_string(),
     0x88f8 => "NC-SI".to_string(),
     0x88fb => "PRP".to_string(),
     0x8902 => "CFM".to_string(),

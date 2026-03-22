@@ -1,23 +1,30 @@
 use pcap_file::pcap::PcapPacket;
+use crate::{Protocol, get_timestamp};
 
-use crate::get_timestamp;
-
-#[derive(Default)]
-pub(crate) struct Protocol
+pub struct GPTP
 {
   count: u32
 }
 
-impl Protocol
+impl GPTP
 {
-  pub fn take_packet(&mut self, packet: PcapPacket<'static>) -> Result<PcapPacket<'static>, (PcapPacket<'static>, String)>
-  {
-    self.count += 1;
-
-    if self.count > 50 { return Err((packet, get_timestamp()));   }
-    else { return Ok(packet); }
-  }
+  pub fn new() -> Self { return GPTP::default(); }
 }
 
-// pub(crate) trait ProtocolTrait
-// {}
+impl Default for GPTP
+{
+  fn default() -> Self { return GPTP { count: u32::default() }; }
+}
+
+impl Protocol for GPTP
+{
+  fn validate_packet(&mut self, packet: &PcapPacket) -> Result<(), String>
+  {
+    self.count += 1;
+    self.count %= 100;
+
+    if self.count >= 30 { return Err("Packet count reached 20".to_string()); }
+
+    return Ok(());
+  }
+}
