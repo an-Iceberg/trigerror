@@ -11,7 +11,7 @@ use crate::{cli::CLI, config::Config, constants::{
   DEFAULT_RETRIGGER,
   DEFAULT_TIME_AFTER,
   DEFAULT_TIME_BEFORE,
-}, get_timestamp, pac2pac, ring_buffer::RingBuffer, timeval_to_i64, writer::Writer};
+}, get_timestamp, to_pcap, ring_buffer::RingBuffer, timeval_to_i64, writer::Writer};
 
 pub enum Source { Internal, External }
 
@@ -166,7 +166,7 @@ impl Recording
   {
     match self.capture.next_packet()
     {
-      Ok(packet) => { self.current_packet = pac2pac(packet); }
+      Ok(packet) => { self.current_packet = to_pcap(packet); }
       Err(error) => return Err(error),
     };
 

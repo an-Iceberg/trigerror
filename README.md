@@ -1,10 +1,10 @@
 # `trigerror`
 
 - TODO: calculate filesize from captured packets
-- TODO: sync, announce and Pdelay messages are important.
+- TODO: (gPTP) sync, announce and Pdelay messages are important.
 - DONE: https://wiki.archlinux.org/title/Capabilities
 - DONE: `.pcap` vs. `.pcapng`
-- TODO: research: `.pcap`/`.pcapng` file format
+- DONE: research: `.pcap`/`.pcapng` file format
 - DONE: for writing `.pcapng` files, 2 crates are of interest: `pcapng-writer` and `pcap-file`
 - NOTE: https://biot.com/capstats/bpf.html
 - NOTE: [intona ethernet tap source code](https://github.com/intona/ethernet-debugger#readme)
@@ -12,13 +12,10 @@
 - SOLL-ZIEL: store data as `.pcapng` files
 - NOTE: linkspeed
 - TODO: calculate size of buffer (important if operating on RPi with max RAM of 8GB) (constrained memory environment)
-- DONE: for testing: 100th packet as error trigger
-- NOTE: param prio: 1. time 2. memory size 3. packet count\
-  if no more memory, trim start of error
+- NOTE: param prio: 1. time 2. memory size 3. packet count. if no more memory, trim start of error
 - TODO: consider some logging library: https://docs.rs/log/latest/log/
 - TODO: filters need to be handled cleanly and options need to be defined clearly.
-- TODO: `RingBuffer` and `Trigerror` could be singletons.
-- TODO: link to dependencies
+- TODO: in the BA paper link to dependencies directly
 - TODO: abstract auch noch mehrwert und was dabei rauskam (wichtigsten ergebnisse)
 - TODO: create an additional file for each recording detailing which packets are faulty and what is faulty about them.
 

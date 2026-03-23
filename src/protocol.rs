@@ -1,6 +1,7 @@
 use pcap_file::pcap::PcapPacket;
 use crate::{Protocol, get_timestamp};
 
+// TODO: move this to protocols::gptp.rs
 pub struct GPTP
 {
   count: u32

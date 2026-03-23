@@ -19,15 +19,15 @@ use libc::timeval;
 use pcap::{Active, Capture, Device, Packet};
 use pcap_file::pcap::PcapPacket;
 use colored::Colorize;
-
 use crate::config::Config;
 
+// TODO: move this to protocols.rs
 pub trait Protocol
 {
   fn validate_packet(&mut self, packet: &PcapPacket) -> Result<(), String>;
 }
 
-pub fn pac2pac(packet: Packet) -> PcapPacket<'static>
+pub fn to_pcap(packet: Packet) -> PcapPacket<'static>
 {
   return  PcapPacket::new_owned(
     Duration::from_secs_f64(timeval_to_i64(packet.header.ts)),
