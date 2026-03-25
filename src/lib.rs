@@ -21,6 +21,16 @@ use pcap_file::pcap::PcapPacket;
 use colored::Colorize;
 use crate::config::Config;
 
+/// Macro for syntactically more pleasing lambda functions/closures
+#[macro_export]
+macro_rules! λ
+{
+  ( $($variable:ident $(: $type:ty)?),* => $expression:expr ) =>
+  {
+    |$($variable $(: $type)?),*| $expression
+  }
+}
+
 // TODO: move this to protocols.rs
 pub trait Protocol
 {

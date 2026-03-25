@@ -1,10 +1,17 @@
-use std::{collections::VecDeque, fs::File, io::Write, path::PathBuf, time::Duration};
+use std::{collections::VecDeque, fs::File, io::Write, path::PathBuf, process::exit, time::Duration};
 use clap::Parser;
 use pcap_file::pcap::{PcapPacket, PcapWriter};
-use trigerror::{Protocol, cli::CLI, config::Config, create_capture_device, get_timestamp, to_pcap, protocol::GPTP};
+use trigerror::{Protocol, cli::CLI, config::Config, create_capture_device, get_timestamp, protocol::GPTP, to_pcap, λ};
 
 fn main()
 {
+  // let vec: Vec<u32> = vec![1,2,3,4,5];
+  // let result = vec.iter()
+  //   .map(λ!{n => n.pow(2)})
+  //   .sum::<u32>();
+  // dbg!{result};
+  // exit(-1);
+
   let cli = CLI::parse();
   let mut interfaces = vec![];
   let mut config = Config::new();
@@ -88,18 +95,13 @@ fn main()
           let mut packet_counter = 0;
           let mut error_time = packet.timestamp;
           #[allow(non_snake_case)]
-          let mut Δtime;
+          let mut Δ_time;
+          let mut retrigger_counter = 1;
 
           info_file.write_all(format!("#{}: {error}\n", packet_number).as_bytes()).expect("Error writing to errors file");
 
           loop
           {
-            // TODO: escape this loop once the post_trigger conditions are met.
-            // TODO: retrigger condig
-            // TODO: retrigger counter
-            // TODO: time_after
-            // TODO: count_after
-
             let packet = to_pcap(capture_device.next_packet().unwrap());
             packet_number += 1;
             capture_writer.write_packet(&packet).unwrap();
@@ -107,13 +109,18 @@ fn main()
             {
               info_file.write_all(format!("#{packet_number}: {error}\n").as_bytes()).unwrap();
 
-              // TODO: handle retrigger behavior.
+              if retrigger_counter < config.max_retriggers
+              {
+                retrigger_counter += 1;
+                packet_counter = 0;
+                Δ_time = Duration::from_millis(0);
+              }
             }
 
             packet_counter += 1;
-            Δtime = packet.timestamp.abs_diff(error_time);
+            Δ_time = packet.timestamp.abs_diff(error_time);
 
-            if packet_counter > config.count_after || Δtime.as_millis() > config.time_after as u128
+            if packet_counter > config.count_after || Δ_time.as_millis() > config.time_after as u128
             { break; }
           }
 
