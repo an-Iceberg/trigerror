@@ -28,3 +28,4 @@ target
 *.pcapng
 !/example_scenarios/*.pcap
 !/example_scenarios/*.pcapng
+*.errors.txt

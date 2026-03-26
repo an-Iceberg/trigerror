@@ -33,6 +33,7 @@ fn main()
     // Read config file in cwd (if exists).
     if let Some(ifaces) = config.set_from_ini(PathBuf::from("trigerror.ini"))
     { interfaces = ifaces; }
+
     // Overwrite options from CLI.
     if let Some(ifaces) = config.set_from_cli(cli)
     { interfaces = ifaces; }
@@ -51,7 +52,7 @@ fn main()
     config.interface = first_iface.to_owned();
     let mut capture_device = create_capture_device(&config);
     // Allocate .with_capacity().
-    let mut buffer: VecDeque<PcapPacket> = VecDeque::new();
+    let mut buffer: VecDeque<PcapPacket> = VecDeque::with_capacity(config.count_before as usize);
     let mut protocol = GPTP::new();
     // let mut recording = Recording::new(config);
 
@@ -66,15 +67,28 @@ fn main()
       {
         Ok(_) =>
         {
-          let now = packet.timestamp;
+          let front_packet_time = packet.timestamp;
 
           buffer.push_back(packet);
-          // TODO: pop_front packets that exceed the time limit and buffer count.
 
-          // FIX: this probably doesn't work correctly.
+          // println!(
+          //   "[before] δ time: {:>4}ms, buffer size: {:>4}",
+          //   front_packet_time.abs_diff(buffer.front().unwrap().timestamp).as_millis(),
+          //   buffer.len(),
+          // );
+
+          // TODO: time is prio #1
+          // NOTE: this is a constantly moving time window. It can happen, that the buffer barely has anything in it but it
+          // NOTE: doesn't get filled up further b/c the next packet arrived so much later that all packets in the buffer expired.
           // Discard packets that are too old.
-          while now.abs_diff(buffer.front().unwrap().timestamp).as_millis() > config.time_before as u128
+          while front_packet_time.abs_diff(buffer.front().unwrap().timestamp).as_millis() > config.time_before as u128
           { buffer.pop_front().unwrap(); }
+
+          // println!(
+          //   "[after]  δ time: {:>4}ms, buffer size: {:>4}",
+          //   front_packet_time.abs_diff(buffer.front().unwrap().timestamp).as_millis(),
+          //   buffer.len(),
+          // );
 
           // Discard packets that make the buffer too big.
           while buffer.len() as u32 > config.count_before
@@ -109,41 +123,46 @@ fn main()
           let mut packet_number = buffer.len();
           let mut packet_counter = 0;
           let mut error_time = packet.timestamp;
-          #[allow(non_snake_case)]
-          let mut Δ_time;
+          let mut δ_time;
           let mut retrigger_counter = 1;
 
           info_file.write_all(format!("packet No. {packet_number}: {error}\n").as_bytes())
             .expect("Error writing to errors file");
 
+          // Write network traffic to capture and info file.
           loop
           {
             let packet = to_pcap(capture_device.next_packet().unwrap());
             packet_number += 1;
             capture_writer.write_packet(&packet).unwrap();
 
+            // Another error happened! Record info about it.
             if let Err(error) = protocol.validate_packet(&packet)
             {
               info_file.write_all(format!("packet No. {packet_number}: {error}\n").as_bytes())
                 .expect("Error writing to errors file");
 
+              // Handle retrigger behavior.
               if config.retrigger && retrigger_counter < config.max_retriggers
               {
                 println!("[ {} ] retrigger!", "INFO".cyan());
                 retrigger_counter += 1;
                 packet_counter = 0;
-                Δ_time = Duration::from_millis(0);
+                δ_time = Duration::from_millis(0);
+                error_time = packet.timestamp;
               }
             }
 
-            packet_counter += 1;
-            Δ_time = packet.timestamp.abs_diff(error_time);
+            // End of capture conditions.
 
-            if Δ_time.as_millis() > config.time_after as u128
+            δ_time = packet.timestamp.abs_diff(error_time);
+            if δ_time.as_millis() > config.time_after as u128
             {
               println!("[ {} ] end of writing due to time_after exceeded", "INFO".cyan());
               break;
             }
+
+            packet_counter += 1;
             if packet_counter > config.count_after
             {
               println!("[ {} ] end of writing due to count_after exceeded", "INFO".cyan());

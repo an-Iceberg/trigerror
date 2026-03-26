@@ -1,3 +1,5 @@
+# TODO: move binary to `bin` folder and change capabilities there.
+
 build:
   cargo build --color always --message-format human
   sudo setcap cap_net_raw+ep target/debug/trigerror

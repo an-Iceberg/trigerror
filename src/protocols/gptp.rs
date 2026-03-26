@@ -24,9 +24,9 @@ impl Protocol for GPTP
     // Sync timeout, frame comes periodically, record when packet is missing (datafield last_sync_timer)
     // Figure 11-6
     self.count += 1;
-    self.count %= 1000;
+    self.count %= 2_000;
 
-    if self.count == 500 { return Err("Protocol packet count reached 500".to_string()); }
+    if self.count == 1_000 { return Err(format!("Protocol counted {} packets.", self.count)); }
 
     return Ok(());
   }
