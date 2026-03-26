@@ -50,6 +50,7 @@ fn main()
     let first_iface = interfaces.first().unwrap();
     config.interface = first_iface.to_owned();
     let mut capture_device = create_capture_device(&config);
+    // Allocate .with_capacity().
     let mut buffer: VecDeque<PcapPacket> = VecDeque::new();
     let mut protocol = GPTP::new();
     // let mut recording = Recording::new(config);
@@ -96,7 +97,7 @@ fn main()
 
           // Creating a file with information about the errors.
           let mut out_path = config.out_dir.clone();
-          out_path.push(format!("errors_{interface}_{timestamp}.txt"));
+          out_path.push(format!("trigerror_{interface}_{timestamp}.errors.txt"));
           let mut info_file = File::create(out_path).expect("couldn't create errors file");
 
           // NOTE: This might be very slow.
@@ -138,14 +139,14 @@ fn main()
             packet_counter += 1;
             Δ_time = packet.timestamp.abs_diff(error_time);
 
-            if packet_counter > config.count_after
-            {
-              println!("[ {} ] end of writing due to count_after exceeded", "INFO".cyan());
-              break;
-            }
             if Δ_time.as_millis() > config.time_after as u128
             {
               println!("[ {} ] end of writing due to time_after exceeded", "INFO".cyan());
+              break;
+            }
+            if packet_counter > config.count_after
+            {
+              println!("[ {} ] end of writing due to count_after exceeded", "INFO".cyan());
               break;
             }
           }

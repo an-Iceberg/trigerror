@@ -20,6 +20,7 @@
 - TODO: create an additional file for each recording detailing which packets are faulty and what is faulty about them.
 - TODO: make use of [`PcapParser`](https://docs.rs/pcap-file/latest/pcap_file/pcap/struct.PcapParser.html)
 - TODO: {optional} read numbers correctly from strings like "1_000"
+- TODO: `ip` create virtual links and run traffic on them from `.pcap` file
 
 ## Useful resources
 - [gPTP from ZHAW](https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page)
