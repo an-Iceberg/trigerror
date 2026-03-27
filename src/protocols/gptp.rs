@@ -1,5 +1,12 @@
+pub mod message_type;
+pub mod flags;
+pub mod header;
+pub mod message;
+
 use pcap_file::pcap::PcapPacket;
 use crate::Protocol;
+
+type Octet = u8;
 
 pub struct GPTP
 {
