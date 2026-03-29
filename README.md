@@ -37,6 +37,11 @@
 - [pcap file format](https://www.endace.com/learn/what-is-a-pcap-file)
 - [UNIX epoch converter](https://www.epochconverter.com/)
 - [ZHAW Overleaf template](https://www.overleaf.com/latex/templates/zhaw-thesis-template-v2-dot-0/dgmxrbjjwsgy)
+- state machine libraries
+  - https://github.com/titanclass/edfsm
+  - https://github.com/eugene-babichenko/rust-fsm
+  - https://github.com/mdeloof/statig
+  - https://crates.io/search?q=finite%20state%20machine
 
 ## References
 - [`timeval` `struct` fields meaning](https://man7.org/linux/man-pages/man3/timeval.3type.html)

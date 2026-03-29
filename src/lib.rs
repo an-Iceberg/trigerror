@@ -12,13 +12,13 @@ pub mod config;
 pub mod constants;
 pub mod protocols;
 
-use std::{process::exit, time::{Duration, SystemTime}};
 use chrono::{DateTime, Utc};
+use colored::Colorize;
+use crate::config::Config;
 use libc::timeval;
 use pcap::{Active, Capture, Device, Packet};
 use pcap_file::pcap::PcapPacket;
-use colored::Colorize;
-use crate::config::Config;
+use std::{process::exit, time::{Duration, SystemTime}};
 
 /// Macro for syntactically more pleasing lambda functions/closures
 #[macro_export]

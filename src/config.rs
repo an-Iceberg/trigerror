@@ -18,6 +18,7 @@ pub struct Config
   /// The interface(s), from which packets should be read.
   pub interface: String,
   /// These are the protocols that trigger a capture when an error happens in them.
+  #[deprecated]
   pub protocols: Vec<String>,
   /// Path where the captured data is stored as a `.pcap` file.
   pub out_dir: PathBuf,

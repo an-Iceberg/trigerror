@@ -26,6 +26,7 @@ pub struct CLI
   // TODO: turn this into just a String and parse it into a Vec later.
   /// These are the protocols we want to monitor for errors.
   /// This argument is parsed as a String and gets split into a list later on.
+  #[deprecated]
   #[arg(long, short = 'p')]
   pub protocols: Option<String>,
 
