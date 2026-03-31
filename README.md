@@ -42,6 +42,7 @@
   - https://github.com/eugene-babichenko/rust-fsm
   - https://github.com/mdeloof/statig
   - https://crates.io/search?q=finite%20state%20machine
+- [state machine pattern for Rust](https://refactoring.guru/design-patterns/state/rust/example)
 
 ## References
 - [`timeval` `struct` fields meaning](https://man7.org/linux/man-pages/man3/timeval.3type.html)

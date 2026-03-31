@@ -11,16 +11,26 @@ pub mod cli;
 pub mod config;
 pub mod constants;
 pub mod protocols;
+pub mod octet;
 
 use chrono::{DateTime, Utc};
 use colored::Colorize;
-use crate::config::Config;
+use crate::{config::Config, protocols::gptp::{flags::Flags, header::Header, message::GPTPMesage, message_type::MessageType}};
 use libc::timeval;
 use pcap::{Active, Capture, Device, Packet};
 use pcap_file::pcap::PcapPacket;
 use std::{process::exit, time::{Duration, SystemTime}};
 
-/// Macro for syntactically more pleasing lambda functions/closures
+type Octet = u8;
+
+/// Macro for syntactically more pleasing lambda functions/closures.
+///
+/// Preferably write it like this: `λ!{n => n*2}`.
+///
+/// ---
+///
+/// I would have loved to implement syntax that looks like this: `λ!{n -> n*2}`
+/// but Rust doesn't allow such syntax :(
 #[macro_export]
 macro_rules! λ
 {
@@ -30,10 +40,10 @@ macro_rules! λ
   }
 }
 
-// TODO: move this to protocols.rs
-pub trait Protocol
+/// Returns, whether the bit at `index` is set in the byte `byte`.
+pub fn get_bit(byte: u8, index: usize) -> bool
 {
-  fn validate_packet(&mut self, packet: &PcapPacket) -> Result<(), String>;
+  return (byte >> index & 0x0000_0001) == 0x0000_0001;
 }
 
 pub fn to_pcap(packet: Packet) -> PcapPacket<'static>
@@ -145,6 +155,7 @@ pub fn create_capture_device(config: &Config) -> Capture<Active>
   return capture;
 }
 
+#[deprecated]
 pub fn get_ether_type(byte: u16) -> String
 {
   return match byte

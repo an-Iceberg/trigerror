@@ -1,8 +1,8 @@
-use std::{collections::VecDeque, fs::File, io::Write, path::PathBuf, process::exit, time::Duration};
 use clap::Parser;
-use pcap_file::pcap::{PcapPacket, PcapWriter};
-use trigerror::{Protocol, cli::CLI, config::Config, create_capture_device, get_timestamp, protocols::gptp::GPTP, to_pcap, λ};
 use colored::Colorize;
+use pcap_file::pcap::{PcapPacket, PcapWriter};
+use std::{collections::VecDeque, fs::File, io::Write, path::PathBuf, process::exit, time::Duration};
+use trigerror::{cli::CLI, config::Config, create_capture_device, get_timestamp, protocols::{Protocol, gptp::GPTP}, to_pcap, λ};
 
 fn main()
 {
