@@ -41,7 +41,7 @@ pub enum GPTPMesage
   {
     // TODO: header 11.4.2
     header: Header,
-    reserved: [Octet; 10]
+    // reserved: [Octet; 10]
   },
   FollowUp
   {
@@ -78,6 +78,7 @@ impl GPTPMesage
   {
     return match message_type
     {
+      // TODO: use Flags to determine 1 or 2 step sync (Flags.two_step).
       MessageType::Sync => GPTPMesage::Sync1Step
       {
         header: Header::new(message_type, payload),
@@ -251,6 +252,8 @@ impl GPTPMesage
           0b1111_1111,
           0b1111_1111,
         ],
+        // TODO: TLV table 10-20
+        // TODO: only gPTP-capable TLV
       },
     };
   }

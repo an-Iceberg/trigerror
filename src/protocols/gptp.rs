@@ -49,7 +49,8 @@ impl Protocol for GPTP
       vlan = true;
     }
 
-    // Not PTP, we don't care.
+    // FIX: VLAN doesn't have PTP
+    // Not PTP; we don't care.
     if ether_type != 0x88f7 { return Ok(()); }
 
     // We now only have PTP packets.
@@ -61,7 +62,9 @@ impl Protocol for GPTP
       true => packet.data[17..].into()
     };
 
-    // FIX: do we need to reverse the bits with .reverse_bits()?
+    // NOTE: do we need to reverse the bits with .reverse_bits()?
+    // FIX: don't right shift!
+    // FIX: apply mask to set upper 4 bits to 0s.
     // Validate message type.
     let message_type = MessageType::from_u8(payload[0] >> 4)?;
 
