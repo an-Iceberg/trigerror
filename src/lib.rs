@@ -15,7 +15,7 @@ pub mod octet;
 
 use chrono::{DateTime, Utc};
 use colored::Colorize;
-use crate::{config::Config, protocols::gptp::{flags::Flags, header::Header, message::GPTPMesage, message_type::MessageType}};
+use crate::config::Config;
 use libc::timeval;
 use pcap::{Active, Capture, Device, Packet};
 use pcap_file::pcap::PcapPacket;
@@ -46,6 +46,8 @@ pub fn get_bit(byte: u8, index: usize) -> bool
   return (byte >> index & 0x0000_0001) == 0x0000_0001;
 }
 
+/// Converts a `Packet` struct from a `pcap::Capture` device to a `PcapPacket`
+/// which can easily be used for writing packets to a capture file.
 pub fn to_pcap(packet: Packet) -> PcapPacket<'static>
 {
   return  PcapPacket::new_owned(
@@ -55,21 +57,28 @@ pub fn to_pcap(packet: Packet) -> PcapPacket<'static>
   )
 }
 
+// TODO: maybe return a `Duration` instead?
+/// Converts a C `timeval` to an `f64` timestamp.
+///
+/// [Source](https://man7.org/linux/man-pages/man3/timeval.3type.html)
 pub fn timeval_to_i64(timeval: timeval) -> f64
 {
   let μ = 1e-6;
   return timeval.tv_sec as f64 + (μ * timeval.tv_usec as f64);
 }
 
+/// Returns the current timestamp as a formatted `String`.
 pub fn get_timestamp() -> String
 {
   let system_time = SystemTime::now();
   let datetime: DateTime<Utc> = system_time.into();
   return datetime.format("%Y-%m-%d_%T").to_string();
+  // This might be how to get milliseconds to show up.
   // return datetime.format("%Y-%m-%d_%T.%.5f").to_string();
 }
 
 /// Extracting the ether type as a u16 number by right shifting the values.
+///
 /// [source](https://stackoverflow.com/questions/50243866/how-do-i-convert-two-u8-primitives-into-a-u16-primitive#answer-50244328)
 pub fn bytes_to_u16(first_byte: u8, second_byte: u8) -> u16
 { return ((first_byte as u16) << 8) | second_byte as u16; }
