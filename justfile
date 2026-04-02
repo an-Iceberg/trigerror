@@ -1,39 +1,31 @@
 # TODO: move binary to `bin` folder and change capabilities there.
 
 build:
+  mkdir -p bin
   cargo build --color always --message-format human
-  sudo setcap cap_net_raw+ep target/debug/trigerror
+  cp target/debug/trigerror bin
+  mv bin/trigerror bin/trigerror_gptp_dbg
+  sudo setcap cap_net_raw+ep bin/trigerror_gptp_dbg
 
 run: build
-  target/debug/trigerror
+  bin/trigerror_gptp_dbg
 
 build-release:
+  mkdir -p bin
   cargo build --release --color always --message-format human
-  sudo setcap cap_net_raw+ep target/release/trigerror
+  cp target/release/trigerror bin
+  mv bin/trigerror bin/trigerror_gptp
+  sudo setcap cap_net_raw+ep bin/trigerror_gptp
 
 run-release: build-release
-  target/release/trigerror
+  bin/trigerror_gptp
 
 test:
   cargo test --color always --message-format human
 
 clean:
   cargo clean --color always
-
-# dev: build
-#   ./target/debug/trigerror --help
-
-# give-net-cap:
-#   sudo setcap cap_net_raw+ep target/debug/trigerror
-
-dev: build
-  target/debug/trigerror --help
-
-dev2: build
-  target/debug/trigerror --interfaces "enp0s13f0u3u2i5" --protocols "ptp" --filters "ptp,gptp, http, ssh" --count-before 20 --retrigger false
-
-dev3: build
-  target/debug/trigerror --filters ""
+  rm -rf bin
 
 dev-school: build
   target/debug/trigerror --interfaces "wlan0"

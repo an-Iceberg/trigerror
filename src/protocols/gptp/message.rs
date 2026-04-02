@@ -1,6 +1,8 @@
 use crate::{Octet, bytes_to_u16, protocols::gptp::message_type::MessageType};
 use super::header::Header;
 
+// TODO: reverse byte order.
+
 pub enum GPTPMesage
 {
   Announce

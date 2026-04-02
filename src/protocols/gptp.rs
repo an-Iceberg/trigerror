@@ -4,6 +4,7 @@ pub mod header;
 pub mod message;
 pub mod md_sync_receive_sm;
 
+use libc::PACKET_BROADCAST;
 use pcap_file::pcap::PcapPacket;
 use crate::{bytes_to_u16, protocols::{Protocol, gptp::{message::GPTPMesage, message_type::MessageType}}};
 
@@ -34,33 +35,15 @@ impl Protocol for GPTP
 
     if self.count == 1_000 { return Err(format!("Protocol counted {} packets.", self.count)); }
 
-    // VLAN = 0x8100
     // PTP = 0x88f7
 
-    // Determine EtherType.
-    let mut ether_type = bytes_to_u16(packet.data[12], packet.data[13]);
-    let mut vlan = false;
+    // TODO: reverse byte order.
 
-    // Handle VLAN.
-    if ether_type == 0x8100
-    {
-      // Either 15, 16 or 16, 17
-      ether_type = bytes_to_u16(packet.data[15], packet.data[16]);
-      vlan = true;
-    }
-
-    // FIX: VLAN doesn't have PTP
     // Not PTP; we don't care.
-    if ether_type != 0x88f7 { return Ok(()); }
+    if bytes_to_u16(packet.data[12], packet.data[13]) != 0x88f7
+    { return Ok(()); }
 
-    // We now only have PTP packets.
-
-    // Extracting the payload from the ethernet frame.
-    let payload: &[u8] = match vlan
-    {
-      false => packet.data[14..].into(),
-      true => packet.data[17..].into()
-    };
+    let payload = &packet.data[14..];
 
     // NOTE: do we need to reverse the bits with .reverse_bits()?
     // FIX: don't right shift!
