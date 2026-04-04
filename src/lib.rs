@@ -40,6 +40,15 @@ macro_rules! λ
   }
 }
 
+pub fn duration_to_string(timestamp: Duration) -> String
+{
+  let datetime = DateTime::from_timestamp(
+    timestamp.as_secs() as i64,
+    timestamp.as_nanos() as u32
+  ).unwrap();
+  return datetime.format("%Y-%m-%d_%T%.f").to_string();
+}
+
 /// Returns, whether the bit at `index` is set in the byte `byte`.
 pub fn get_bit(byte: u8, index: usize) -> bool
 {
@@ -72,7 +81,8 @@ pub fn get_timestamp() -> String
 {
   let system_time = SystemTime::now();
   let datetime: DateTime<Utc> = system_time.into();
-  return datetime.format("%Y-%m-%d_%T").to_string();
+  // NOTE: see if the "%f" works.
+  return datetime.format("%Y-%m-%d_%T%.f").to_string();
   // This might be how to get milliseconds to show up.
   // return datetime.format("%Y-%m-%d_%T.%.5f").to_string();
 }

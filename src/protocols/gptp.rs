@@ -4,7 +4,6 @@ pub mod header;
 pub mod message;
 pub mod md_sync_receive_sm;
 
-use libc::PACKET_BROADCAST;
 use pcap_file::pcap::PcapPacket;
 use crate::{bytes_to_u16, protocols::{Protocol, gptp::{message::GPTPMesage, message_type::MessageType}}};
 
@@ -31,13 +30,16 @@ impl Protocol for GPTP
     // Sync timeout, frame comes periodically, record when packet is missing (datafield last_sync_timer)
     // Figure 11-6
     self.count += 1;
-    self.count %= 2_000;
+    self.count %= 200;
 
-    if self.count == 1_000 { return Err(format!("Protocol counted {} packets.", self.count)); }
+    if self.count == 100 { return Err(format!("Protocol counted {} packets.", self.count)); }
 
     // PTP = 0x88f7
 
     // TODO: reverse byte order.
+
+    dbg!{format!("{:#X}", packet.data[12])};
+    dbg!{format!("{:#X}", packet.data[13])};
 
     // Not PTP; we don't care.
     if bytes_to_u16(packet.data[12], packet.data[13]) != 0x88f7

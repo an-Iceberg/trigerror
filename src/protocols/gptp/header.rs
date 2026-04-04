@@ -1,6 +1,9 @@
+use std::time::Duration;
+
 use crate::{Octet, bytes_to_u16, protocols::gptp::flags::Flags};
 use super::message_type::MessageType;
 
+/// Represents the header of a gPTP message as defined in the standard (802.1AS-2025) 11.4.2.
 pub struct Header
 {
   message_type: MessageType,
@@ -71,4 +74,30 @@ impl Header
       log_message_interval: payload[33],
     };
   }
+
+  pub fn message_type(&self) -> &MessageType { return &self.message_type; }
+  pub fn major_sd_old(&self) -> Octet { return self.major_sd_old; }
+  pub fn version_ptp(&self) -> Octet { return self.version_ptp; }
+  pub fn minor_version_ptp(&self) -> Octet { return self.minor_version_ptp; }
+  pub fn message_length(&self) -> u16 { return self.message_length; }
+  pub fn domain_number(&self) -> Octet { return self.domain_number; }
+  pub fn minor_sd_old(&self) -> Octet { return self.minor_sd_old; }
+  pub fn flags(&self) -> &Flags { return &self.flags; }
+  pub fn correction_field(&self) -> &[Octet; 8] { return &self.correction_field; }
+  pub fn message_type_specific(&self) -> &[Octet; 4] { return &self.message_type_specific; }
+  pub fn source_port_identity(&self) -> &[Octet; 10] { return &self.source_port_identity; }
+  pub fn sequence_id(&self) -> &[Octet; 2] { return &self.sequence_id; }
+  pub fn control_field(&self) -> Octet { return self.control_field; }
+  /// From 10.3.10.7:
+  /// > The current value of the logarithm of base 2 of the mean time interval \[…].
+  ///
+  /// Meaning, you can create a duration from this by doing:
+  /// ```
+  /// Duration::from_secs((header.log_message_interval() as u64).pow(2));
+  /// ```
+  pub fn log_message_interval(&self) -> Octet { return self.log_message_interval; }
+
+  /// Returns the expected time interval until the next message as a `std::time::Duration`.
+  pub fn message_interval(&self) -> Duration
+  { return Duration::from_secs((self.log_message_interval as u64).pow(2)); }
 }

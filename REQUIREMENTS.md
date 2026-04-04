@@ -20,6 +20,6 @@
 - The capturing part and the protocol validating part should be maximally decoupled (only interfacing via a `trait`).
 - {nice to have} During the lifetime of the app give out the amount of packets and the amount of files generated and the number of errors captured.
 - The app should be able to listen on multiple interfaces at the same time each in one separate thread.
-  - If an error happens on one interface, that should trigger a recording on all running trigerrors.
+  - If an error happens on one interface, that should trigger a recording on all running instances.
   - The type of error (local, external) should be specified in the file name.
   - {nice to have} print that information into the console.
