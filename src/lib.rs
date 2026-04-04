@@ -60,20 +60,19 @@ pub fn get_bit(byte: u8, index: usize) -> bool
 pub fn to_pcap(packet: Packet) -> PcapPacket<'static>
 {
   return  PcapPacket::new_owned(
-    Duration::from_secs_f64(timeval_to_i64(packet.header.ts)),
+    timeval_to_duration(packet.header.ts),
     packet.header.caplen,
     packet.data.into()
   )
 }
 
-// TODO: maybe return a `Duration` instead?
-/// Converts a C `timeval` to an `f64` timestamp.
+/// Converts a C `timeval` to a `std::time::Duration`.
 ///
 /// [Source](https://man7.org/linux/man-pages/man3/timeval.3type.html)
-pub fn timeval_to_i64(timeval: timeval) -> f64
+pub fn timeval_to_duration(timeval: timeval) -> Duration
 {
   let μ = 1e-6;
-  return timeval.tv_sec as f64 + (μ * timeval.tv_usec as f64);
+  return Duration::from_secs_f64(timeval.tv_sec as f64 + (μ * timeval.tv_usec as f64));
 }
 
 /// Returns the current timestamp as a formatted `String`.

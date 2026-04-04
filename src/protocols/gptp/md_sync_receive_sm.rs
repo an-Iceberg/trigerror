@@ -51,6 +51,7 @@ impl MDSyncReceiveStateMachine
         header.control_field();
         todo!();
       },
+
       (&State::WaitingForSync, GPTPMesage::Sync1Step { header, .. }) =>
       {
         self.state = State::WaitingForFollowUp;
@@ -74,6 +75,7 @@ impl MDSyncReceiveStateMachine
 
         self.message_interval = header.message_interval();
       },
+
       (&State::WaitingForSync, GPTPMesage::Sync2Step { header }) =>
       {
         self.state = State::WaitingForFollowUp;
@@ -97,6 +99,7 @@ impl MDSyncReceiveStateMachine
 
         self.message_interval = header.message_interval();
       },
+
       (&State::WaitingForFollowUp, GPTPMesage::FollowUp { header }) =>
       {
         self.state = State::WaitingForSync;
@@ -120,6 +123,7 @@ impl MDSyncReceiveStateMachine
 
         self.message_interval = header.message_interval();
       },
+
       _ => result = Err("wtf⁈".to_string())
     };
 
