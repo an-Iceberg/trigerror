@@ -72,8 +72,8 @@ impl Config
       }
       Err(error) =>
       {
-        println!("[ {} ] didn't find config file b/c: {}", "ERROR".red(), error);
-        println!("[ {} ] falling back to default configurations", "INFO".cyan());
+        eprintln!("[ {} ] didn't find config file b/c: {}", "ERROR".red(), error);
+        eprintln!("[ {} ] falling back to default configurations", "INFO".cyan());
         return None;
       }
     };
@@ -87,7 +87,7 @@ impl Config
       }
       None =>
       {
-        println!("[ {} ] no configs in file", "ERROR".red());
+        eprintln!("[ {} ] no configs in file", "ERROR".red());
         println!("[ {} ] falling back to default configurations", "INFO".cyan());
         return None;
       }

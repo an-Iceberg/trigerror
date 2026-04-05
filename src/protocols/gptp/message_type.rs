@@ -1,14 +1,15 @@
 use std::fmt::Debug;
 
+#[derive(Clone, Copy)]
 pub enum MessageType
 {
-  Sync =               0x0,
-  PdelayRequest =          0x2,
-  PdelayResponse =         0x3,
-  FollowUp =           0x8,
-  PdelayResponseFollowUp = 0xA,
-  Announce =           0xB,
-  Signaling =          0xC,
+  Sync = 0x0,
+  PeerDelayRequest = 0x2,
+  PeerDelayResponse = 0x3,
+  FollowUp = 0x8,
+  PeerDelayResponseFollowUp = 0xA,
+  Announce = 0xB,
+  Signaling = 0xC,
 }
 
 impl MessageType
@@ -18,10 +19,10 @@ impl MessageType
     return match byte
     {
       0x0 => Ok(MessageType::Sync),
-      0x2 => Ok(MessageType::PdelayRequest),
-      0x3 => Ok(MessageType::PdelayResponse),
+      0x2 => Ok(MessageType::PeerDelayRequest),
+      0x3 => Ok(MessageType::PeerDelayResponse),
       0x8 => Ok(MessageType::FollowUp),
-      0xA => Ok(MessageType::PdelayResponseFollowUp),
+      0xA => Ok(MessageType::PeerDelayResponseFollowUp),
       0xB => Ok(MessageType::Announce),
       0xC => Ok(MessageType::Signaling),
       other => Err(format!("Unknown message type: {other:X}"))
@@ -36,10 +37,10 @@ impl Debug for MessageType
     return match *self
     {
       MessageType::Sync => formatter.write_str("Sync"),
-      MessageType::PdelayRequest => formatter.write_str("PdelayRequest"),
-      MessageType::PdelayResponse => formatter.write_str("PdelayResponse"),
+      MessageType::PeerDelayRequest => formatter.write_str("PeerDelayRequest"),
+      MessageType::PeerDelayResponse => formatter.write_str("PeerDelayResponse"),
       MessageType::FollowUp => formatter.write_str("FollowUp"),
-      MessageType::PdelayResponseFollowUp => formatter.write_str("PdelayResponseFollowUp"),
+      MessageType::PeerDelayResponseFollowUp => formatter.write_str("PeerDelayResponseFollowUp"),
       MessageType::Announce => formatter.write_str("Announce"),
       MessageType::Signaling => formatter.write_str("Signaling"),
     };

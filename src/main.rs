@@ -1,8 +1,8 @@
 use clap::Parser;
 use colored::Colorize;
 use pcap_file::pcap::{PcapPacket, PcapWriter};
-use std::{collections::VecDeque, fs::File, io::Write, path::PathBuf, process::exit, time::Duration};
-use trigerror::{cli::CLI, config::Config, create_capture_device, get_timestamp, protocols::{Protocol, gptp::GPTP}, to_pcap, λ};
+use std::{collections::VecDeque, fs::File, io::Write, path::{Path, PathBuf}, process::exit, time::Duration};
+use trigerror::{cli::CLI, config::Config, constants::DEFAULT_FILE, create_capture_device, get_timestamp, protocols::{Protocol, gptp::GPTP}, to_pcap, λ};
 
 fn main()
 {
@@ -15,8 +15,14 @@ fn main()
 
   let cli = CLI::parse();
 
-  if cli.create_default_config.is_some()
+  if cli.create_default_config
   {
+    if Path::new("trigerror.ini").exists()
+    {
+      eprintln!("[ {} ] file exists already. Not overwriting.", "WARN".yellow());
+      exit(0);
+    }
+
     let mut file = match File::create("trigerror.ini")
     {
       Ok(file) => file,
@@ -26,8 +32,12 @@ fn main()
         exit(-1);
       },
     };
-    // TODO: write all default values into file
-    exit(-1);
+    match file.write_all(DEFAULT_FILE.as_bytes())
+    {
+      Ok(_) => (),
+      Err(error) => eprintln!("[ {} ] couldn't write to file b/c: {}", "ERROR".red(), error),
+    };
+    exit(0);
   }
 
   let mut interfaces = vec![];

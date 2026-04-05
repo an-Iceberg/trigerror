@@ -10,4 +10,18 @@ pub const DEFAULT_MAX_RETRIGGERS: u32 = 10;
 /// In \[MB].
 pub const DEFAULT_FILE_SIZE: u32 = 10;
 
-// pub const DEFAULT_FILE: String = format!("out_dir = {}", DEFAULT_COUNT_AFTER);
+pub const DEFAULT_FILE: &str =
+"# Quotes are not necessary.
+out_dir = .\n\
+interfaces = eth0, wlan0, lo\n\
+filter = ether proto 0x88f7\n\
+\n\
+# trigerror supports underscores for number group separators.
+count_before = 1_000\n\
+time_before = 5_000\n\
+count_after = 1_000\n\
+time_after = 5_000\n\
+\n\
+retrigger = false\n\
+max_retriggers = 10\n\
+";

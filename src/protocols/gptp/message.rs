@@ -77,14 +77,25 @@ impl GPTPMesage
 {
   // FIX: check that the payload is long enough! Some packets don't seem to be long enough.
   /// Takes the message type and the ethernet payload and constructs a PTP message.
-  pub fn new(message_type: MessageType, payload: &[u8]) -> Self
+  pub fn new(message_type: MessageType, payload: &[u8]) -> Result<Self, String>
   {
+    let header = Header::new(message_type, payload);
+    if payload.len() < header.message_length() as usize
+    {
+      return Err(format!(
+        "payload is not long enough. Is: {}, should: {}.",
+        header.message_length(),
+        payload.len()
+      ));
+    }
+
     return match message_type
     {
       // TODO: use Flags to determine 1 or 2 step sync (Flags.two_step).
-      MessageType::Sync => GPTPMesage::Sync1Step
+      MessageType::Sync =>
+      Ok(GPTPMesage::Sync1Step
       {
-        header: Header::new(message_type, payload),
+        header,
         origin_timestamp: [
           payload[34],
           payload[35],
@@ -139,12 +150,16 @@ impl GPTPMesage
           payload[74],
           payload[75],
         ],
-      },
-      MessageType::PdelayRequest => GPTPMesage::PdelayReq
+      }),
+
+      MessageType::PeerDelayRequest =>
+      Ok(GPTPMesage::PdelayReq
       {
         header: Header::new(message_type, payload),
-      },
-      MessageType::PdelayResponse => GPTPMesage::PdelayResp
+      }),
+
+      MessageType::PeerDelayResponse =>
+      Ok(GPTPMesage::PdelayResp
       {
         header: Header::new(message_type, payload),
         request_receipt_timestamp: [
@@ -171,12 +186,15 @@ impl GPTPMesage
           payload[52],
           payload[53],
         ]
-      },
-      MessageType::FollowUp => GPTPMesage::FollowUp
+      }),
+
+      MessageType::FollowUp =>
+      Ok(GPTPMesage::FollowUp
       {
         header: Header::new(message_type, payload),
-      },
-      MessageType::PdelayResponseFollowUp => GPTPMesage::PdelayRespFollowUp
+      }),
+      MessageType::PeerDelayResponseFollowUp =>
+      Ok(GPTPMesage::PdelayRespFollowUp
       {
         header: Header::new(message_type, payload),
         response_origin_timestamp: [
@@ -203,8 +221,10 @@ impl GPTPMesage
           payload[52],
           payload[53],
         ],
-      },
-      MessageType::Announce => GPTPMesage::Announce
+      }),
+
+      MessageType::Announce =>
+      Ok(GPTPMesage::Announce
       {
         header: Header::new(message_type, payload),
         current_utc_offset: bytes_to_u16(payload[44], payload[45]),
@@ -237,8 +257,10 @@ impl GPTPMesage
           payload[67],
         ],
         path_sequence: payload[68..].into(),
-      },
-      MessageType::Signaling => GPTPMesage::Signaling
+      }),
+
+      MessageType::Signaling =>
+      Ok(GPTPMesage::Signaling
       {
         header: Header::new(message_type, payload),
         // TODO: this should be all 1s.
@@ -257,7 +279,7 @@ impl GPTPMesage
         ],
         // TODO: TLV table 10-20
         // TODO: only gPTP-capable TLV
-      },
+      }),
     };
   }
 }

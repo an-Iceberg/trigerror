@@ -97,7 +97,7 @@ pub fn create_capture_device(config: &Config) -> Capture<Active>
     }
     Err(error) =>
     {
-      println!("[ {} ] couldn't list devices b/c: {}", "ERROR".red(), error);
+      eprintln!("[ {} ] couldn't list devices b/c: {}", "ERROR".red(), error);
       exit(-1);
     }
   };
@@ -113,7 +113,7 @@ pub fn create_capture_device(config: &Config) -> Capture<Active>
     }
     None =>
     {
-      println!(
+      eprintln!(
         "[ {} ] device {} not found in device list. Available devices are: {:?}",
         "ERROR".red(),
         config.interface,
@@ -135,7 +135,7 @@ pub fn create_capture_device(config: &Config) -> Capture<Active>
     }
     Err(error) =>
     {
-      println!("[ {} ] couldn't create capture device b/c: {}", "ERROR".red(), error);
+      eprintln!("[ {} ] couldn't create capture device b/c: {}", "ERROR".red(), error);
       exit(-1);
     }
   };
@@ -149,7 +149,7 @@ pub fn create_capture_device(config: &Config) -> Capture<Active>
     }
     Err(error) =>
     {
-      println!("[ {} ] couldn't open capture device b/c: {}", "ERROR".red(), error);
+      eprintln!("[ {} ] couldn't open capture device b/c: {}", "ERROR".red(), error);
       exit(-1);
     }
   };
@@ -159,7 +159,7 @@ pub fn create_capture_device(config: &Config) -> Capture<Active>
     Ok(_) => println!("[ {} ] filters set and compiled", "OK".green()),
     Err(error) =>
     {
-      println!("[ {} ] couldn't set filters b/c: {}", "ERROR".red(), error);
+      eprintln!("[ {} ] couldn't set filters b/c: {}", "ERROR".red(), error);
       exit(-1);
     }
   }

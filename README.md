@@ -1,5 +1,8 @@
 # `trigerror`
 
+Utility for recording network traffic upon encountering an error in a packet.
+
+- TODO: logo
 - TODO: calculate filesize from captured packets
 - TODO: (gPTP) sync, announce and Pdelay messages are important.
 - DONE: https://wiki.archlinux.org/title/Capabilities
@@ -14,13 +17,9 @@
 - TODO: calculate size of buffer (important if operating on RPi with max RAM of 8GB) (constrained memory environment)
 - NOTE: param prio: 1. time 2. memory size 3. packet count. if no more memory, trim start of error
 - TODO: consider some logging library: https://docs.rs/log/latest/log/
-- TODO: filters need to be handled cleanly and options need to be defined clearly.
 - TODO: in the BA paper link to dependencies directly
 - TODO: abstract auch noch mehrwert und was dabei rauskam (wichtigsten ergebnisse)
-- TODO: create an additional file for each recording detailing which packets are faulty and what is faulty about them.
 - TODO: make use of [`PcapParser`](https://docs.rs/pcap-file/latest/pcap_file/pcap/struct.PcapParser.html)
-- TODO: {optional} read numbers correctly from strings like "1_000"
-- TODO: `ip` create virtual links and run traffic on them from `.pcap` file
 
 ## Useful resources
 - [gPTP from ZHAW](https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page)

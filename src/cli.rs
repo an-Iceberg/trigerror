@@ -14,7 +14,7 @@ pub struct CLI
 
   /// The file which is used to configure trigerror. If this option is given then
   /// all other configurations thru the CLI will be ignored.
-  #[arg(long, short = 'o')]
+  #[arg(long, short = 'l')]
   pub config_file_location: Option<PathBuf>,
 
   // TODO: turn this into just a String and parse it into a Vec later.
@@ -25,7 +25,7 @@ pub struct CLI
 
   /// The place in the file system, where the `.pcap` file should be written to.
   /// The default directory is the `cwd`.
-  #[arg(long)]
+  #[arg(long, short = 'o')]
   pub out_dir: Option<PathBuf>,
 
   // TODO: turn this into just a String and parse it into a Vec later.
@@ -59,6 +59,7 @@ pub struct CLI
   #[arg(long, short = 'm')]
   pub max_retriggers: Option<u32>,
 
-  /// Creates the config file in the `cwd` with the default parameters set.
-  pub create_default_config: Option<bool>
+  /// Creates the config file in the current working directory with the default parameters.
+  #[arg(long, short = 'c')]
+  pub create_default_config: bool
 }

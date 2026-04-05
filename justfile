@@ -1,5 +1,3 @@
-# TODO: move binary to `bin` folder and change capabilities there.
-
 build:
   mkdir -p bin
   cargo build --color always --message-format human
@@ -25,10 +23,16 @@ test:
 
 clean:
   cargo clean --color always
-  rm -rf bin
+  rm -r bin/*
+
+dev: build
+  bin/trigerror_gptp_dbg --help
 
 dev-school: build
-  target/debug/trigerror --interfaces "wlan0"
+  bin/trigerror_gptp_dbg --interfaces "wlan0"
 
 dev-home: build
-  target/debug/trigerror --interfaces "enp0s13f0u3u2i5"
+  bin/trigerror_gptp_dbg --interfaces "enp0s13f0u3u2i5"
+
+dev-home-2: build
+  bin/trigerror_gptp_dbg --create-default-config

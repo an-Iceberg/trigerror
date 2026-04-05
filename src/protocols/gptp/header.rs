@@ -1,5 +1,4 @@
 use std::time::Duration;
-
 use crate::{Octet, bytes_to_u16, protocols::gptp::flags::Flags};
 use super::message_type::MessageType;
 
