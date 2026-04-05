@@ -17,9 +17,6 @@ pub struct Config
 {
   /// The interface(s), from which packets should be read.
   pub interface: String,
-  /// These are the protocols that trigger a capture when an error happens in them.
-  #[deprecated]
-  pub protocols: Vec<String>,
   /// Path where the captured data is stored as a `.pcap` file.
   pub out_dir: PathBuf,
   /// The [BPF](https://biot.com/capstats/bpf.html) applied to the capture device.
@@ -49,7 +46,6 @@ impl Default for Config
       interface: "eth0".to_string(),
       filter: "".to_string(),
       out_dir: PathBuf::from("."),
-      protocols: Vec::default(),
       count_before: DEFAULT_COUNT_BEFORE,
       count_after: DEFAULT_COUNT_AFTER,
       time_before: DEFAULT_TIME_BEFORE,
@@ -109,37 +105,27 @@ impl Config
         .collect();
     }
 
-    // TODO: out_dir
-
-    if let Some(Some(protocols)) = default.get("protocols")
-    {
-      self.protocols = protocols
-        .split(",")
-        .map(|protocol| protocol.trim().to_string())
-        .collect();
-    }
-
-    if let Some(Some(filter)) = default.get("filters")
+    if let Some(Some(filter)) = default.get("filter")
     { self.filter = filter.to_owned(); }
 
     if let Some(count_before) = default.get("count_before")
       .and_then(|count_before| count_before.as_ref())
-      .and_then(|count_before| count_before.parse::<u32>().ok())
+      .and_then(|count_before| count_before.replace("_", "").parse::<u32>().ok())
     { self.count_before = count_before; }
 
     if let Some(count_after) = default.get("count_after")
       .and_then(|count_after| count_after.as_ref())
-      .and_then(|count_after| count_after.parse::<u32>().ok())
+      .and_then(|count_after| count_after.replace("_", "").parse::<u32>().ok())
     { self.count_after = count_after; }
 
     if let Some(time_before) = default.get("time_before")
       .and_then(|time_before| time_before.as_ref())
-      .and_then(|time_before| time_before.parse::<u32>().ok())
+      .and_then(|time_before| time_before.replace("_", "").parse::<u32>().ok())
     { self.time_before = time_before; }
 
     if let Some(time_after) = default.get("time_after")
       .and_then(|time_after| time_after.as_ref())
-      .and_then(|time_after| time_after.parse::<u32>().ok())
+      .and_then(|time_after| time_after.replace("_", "").parse::<u32>().ok())
     { self.time_after = time_after; }
 
     if let Some(retrigger) = default.get("retrigger")
@@ -149,7 +135,7 @@ impl Config
 
     if let Some(max_retriggers) = default.get("max_retriggers")
       .and_then(|max_retriggers| max_retriggers.as_ref())
-      .and_then(|max_retriggers| max_retriggers.parse::<u32>().ok())
+      .and_then(|max_retriggers| max_retriggers.replace("_", "").parse::<u32>().ok())
     { self.max_retriggers = max_retriggers; }
 
     if !interfaces.is_empty() { return Some(interfaces); }
@@ -166,15 +152,6 @@ impl Config
       interfaces = ifaces
         .split(",")
         .map(|interface| interface.trim().to_string())
-        .collect();
-    }
-
-    // Configuring protocols thru CLI
-    if let Some(protocols) = cli.protocols
-    {
-      self.protocols = protocols
-        .split(",")
-        .map(|protocol| protocol.trim().to_string())
         .collect();
     }
 

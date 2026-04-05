@@ -1,12 +1,6 @@
 #![allow(clippy::needless_return)]
 #![allow(mixed_script_confusables)]
 
-// pub mod eth_frame;
-// pub mod gptp;
-// pub mod packet;
-// pub mod recording;
-// pub mod ring_buffer;
-// pub mod writer;
 pub mod cli;
 pub mod config;
 pub mod constants;

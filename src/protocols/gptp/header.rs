@@ -88,13 +88,9 @@ impl Header
   pub fn source_port_identity(&self) -> &[Octet; 10] { return &self.source_port_identity; }
   pub fn sequence_id(&self) -> &[Octet; 2] { return &self.sequence_id; }
   pub fn control_field(&self) -> Octet { return self.control_field; }
+
   /// From 10.3.10.7:
   /// > The current value of the logarithm of base 2 of the mean time interval \[…].
-  ///
-  /// Meaning, you can create a duration from this by doing:
-  /// ```
-  /// Duration::from_secs((header.log_message_interval() as u64).pow(2));
-  /// ```
   pub fn log_message_interval(&self) -> Octet { return self.log_message_interval; }
 
   /// Returns the expected time interval until the next message as a `std::time::Duration`.

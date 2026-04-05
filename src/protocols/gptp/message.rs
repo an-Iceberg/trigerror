@@ -75,6 +75,7 @@ pub enum GPTPMesage
 
 impl GPTPMesage
 {
+  // FIX: check that the payload is long enough! Some packets don't seem to be long enough.
   /// Takes the message type and the ethernet payload and constructs a PTP message.
   pub fn new(message_type: MessageType, payload: &[u8]) -> Self
   {
@@ -139,11 +140,11 @@ impl GPTPMesage
           payload[75],
         ],
       },
-      MessageType::PdelayReq => GPTPMesage::PdelayReq
+      MessageType::PdelayRequest => GPTPMesage::PdelayReq
       {
         header: Header::new(message_type, payload),
       },
-      MessageType::PdelayResp => GPTPMesage::PdelayResp
+      MessageType::PdelayResponse => GPTPMesage::PdelayResp
       {
         header: Header::new(message_type, payload),
         request_receipt_timestamp: [
@@ -175,7 +176,7 @@ impl GPTPMesage
       {
         header: Header::new(message_type, payload),
       },
-      MessageType::PdelayRespFollowUp => GPTPMesage::PdelayRespFollowUp
+      MessageType::PdelayResponseFollowUp => GPTPMesage::PdelayRespFollowUp
       {
         header: Header::new(message_type, payload),
         response_origin_timestamp: [

@@ -14,6 +14,22 @@ fn main()
   // exit(-1);
 
   let cli = CLI::parse();
+
+  if cli.create_default_config.is_some()
+  {
+    let mut file = match File::create("trigerror.ini")
+    {
+      Ok(file) => file,
+      Err(error) =>
+      {
+        eprintln!("[ {} ] couldn't create file b/c: {}", "ERROR".red(), error);
+        exit(-1);
+      },
+    };
+    // TODO: write all default values into file
+    exit(-1);
+  }
+
   let mut interfaces = vec![];
   let mut config = Config::new();
 
@@ -158,14 +174,14 @@ fn main()
             δ_time = packet.timestamp.abs_diff(error_time);
             if δ_time.as_millis() > config.time_after as u128
             {
-              println!("[ {} ] end of writing due to time_after exceeded", "INFO".cyan());
+              println!("[ {} ] end of writing b/c time_after exceeded", "INFO".cyan());
               break;
             }
 
             packet_counter += 1;
             if packet_counter > config.count_after
             {
-              println!("[ {} ] end of writing due to count_after exceeded", "INFO".cyan());
+              println!("[ {} ] end of writing b/c count_after exceeded", "INFO".cyan());
               break;
             }
           }

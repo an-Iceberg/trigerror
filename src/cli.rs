@@ -23,13 +23,6 @@ pub struct CLI
   #[arg(long, short = 'i')]
   pub interfaces: Option<String>,
 
-  // TODO: turn this into just a String and parse it into a Vec later.
-  /// These are the protocols we want to monitor for errors.
-  /// This argument is parsed as a String and gets split into a list later on.
-  #[deprecated]
-  #[arg(long, short = 'p')]
-  pub protocols: Option<String>,
-
   /// The place in the file system, where the `.pcap` file should be written to.
   /// The default directory is the `cwd`.
   #[arg(long)]
@@ -65,4 +58,7 @@ pub struct CLI
   /// The maximum amount of errors that should be recorded.
   #[arg(long, short = 'm')]
   pub max_retriggers: Option<u32>,
+
+  /// Creates the config file in the `cwd` with the default parameters set.
+  pub create_default_config: Option<bool>
 }

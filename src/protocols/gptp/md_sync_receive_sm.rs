@@ -48,8 +48,8 @@ impl MDSyncReceiveStateMachine
       ) =>
       {
         // TODO: initialize the state machine.
-        header.control_field();
-        todo!();
+        self.message_interval = header.message_interval();
+        result = Ok(());
       },
 
       (&State::WaitingForSync, GPTPMesage::Sync1Step { header, .. }) =>

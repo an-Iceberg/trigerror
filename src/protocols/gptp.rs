@@ -38,8 +38,11 @@ impl Protocol for GPTP
 
     // TODO: reverse byte order.
 
-    dbg!{format!("{:#X}", packet.data[12])};
-    dbg!{format!("{:#X}", packet.data[13])};
+    // println!("ethertype=0x{:X}{:X}", packet.data[12], packet.data[13]);
+    // dbg!{bytes_to_u16(packet.data[12], packet.data[13])};
+    // println!("{:X}", bytes_to_u16(packet.data[12], packet.data[13]));
+
+    // return Ok(());
 
     // Not PTP; we don't care.
     if bytes_to_u16(packet.data[12], packet.data[13]) != 0x88f7
@@ -51,8 +54,10 @@ impl Protocol for GPTP
     // FIX: don't right shift!
     // FIX: apply mask to set upper 4 bits to 0s.
     // Validate message type.
-    let message_type = MessageType::from_u8(payload[0] >> 4)?;
+    let message_type = MessageType::from_u8(payload[0] & 0b0000_1111)?;
+    dbg!{&message_type};
 
+    // TODO: make this work
     let message = GPTPMesage::new(message_type, payload);
 
     return Ok(());
