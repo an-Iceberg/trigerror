@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::get_bit;
 
 #[derive(Debug)]
@@ -47,4 +49,12 @@ impl Flags
   pub fn ptp_timescale(&self) -> bool { return self.ptp_timescale; }
   pub fn time_traceable(&self) -> bool { return self.time_traceable; }
   pub fn frequency_traceable(&self) -> bool { return self.frequency_traceable; }
+}
+
+impl Display for Flags
+{
+  fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+  {
+    todo!()
+  }
 }

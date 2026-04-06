@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 #[derive(Clone, Copy)]
 pub enum MessageType
@@ -44,5 +44,25 @@ impl Debug for MessageType
       MessageType::Announce => formatter.write_str("Announce"),
       MessageType::Signaling => formatter.write_str("Signaling"),
     };
+  }
+}
+
+impl Display for MessageType
+{
+  fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+  {
+    return formatter.write_str(format!(
+      "{:X}",
+      match self
+      {
+        MessageType::Sync => 0x0,
+        MessageType::PeerDelayRequest => 0x2,
+        MessageType::PeerDelayResponse => 0x3,
+        MessageType::FollowUp => 0x8,
+        MessageType::PeerDelayResponseFollowUp => 0xA,
+        MessageType::Announce => 0xB,
+        MessageType::Signaling => 0xC,
+    }
+    ).as_str());
   }
 }

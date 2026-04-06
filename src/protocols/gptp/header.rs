@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{fmt::Display, time::Duration};
 use crate::{Octet, bytes_to_u16, protocols::gptp::flags::Flags};
 use super::message_type::MessageType;
 
@@ -29,6 +29,7 @@ impl Header
     return Header
     {
       message_type,
+      // TODO: this needs to be reworked. It might be the source of our error.
       // We only care about the last 4 bits.
       major_sd_old: payload[0] & 0b0000_1111,
       // We only care about the first 4 bits.
@@ -96,4 +97,12 @@ impl Header
   /// Returns the expected time interval until the next message as a `std::time::Duration`.
   pub fn message_interval(&self) -> Duration
   { return Duration::from_secs((self.log_message_interval as u64).pow(2)); }
+}
+
+impl Display for Header
+{
+  fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+  {
+    todo!()
+  }
 }
