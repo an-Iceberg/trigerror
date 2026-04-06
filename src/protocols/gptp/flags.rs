@@ -1,5 +1,6 @@
 use crate::get_bit;
 
+#[derive(Debug)]
 pub struct Flags
 {
   alternate_master: bool,

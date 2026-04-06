@@ -3,6 +3,9 @@ use super::header::Header;
 
 // TODO: reverse byte order.
 
+// TODO: debug print as hex numbers
+
+#[derive(Debug)]
 pub enum GPTPMesage
 {
   Announce

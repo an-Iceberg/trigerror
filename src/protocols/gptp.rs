@@ -4,23 +4,40 @@ pub mod header;
 pub mod message;
 pub mod md_sync_receive_sm;
 
+use std::time::Duration;
+
 use pcap_file::pcap::PcapPacket;
-use crate::{bytes_to_u16, protocols::{Protocol, gptp::{message::GPTPMesage, message_type::MessageType}}};
+use crate::{bytes_to_u16, protocols::{Protocol, gptp::{md_sync_receive_sm::MDSyncReceiveStateMachine, message::GPTPMesage, message_type::MessageType}}};
 
 pub struct GPTP
 {
   // TODO: state machines for message types with persistent states.
   count: u32,
+  md_sync_receive_state_machine: MDSyncReceiveStateMachine
 }
 
 impl GPTP
 {
-  pub fn new() -> Self { return GPTP { count: 0, }; }
+  pub fn new() -> Self
+  {
+    return GPTP
+    {
+      count: 0,
+      md_sync_receive_state_machine: MDSyncReceiveStateMachine::new(Duration::from_millis(125))
+    };
+  }
 }
 
 impl Default for GPTP
 {
-  fn default() -> Self { return GPTP { count: u32::default() }; }
+  fn default() -> Self
+  {
+    return GPTP
+    {
+      count: u32::default(),
+      md_sync_receive_state_machine: MDSyncReceiveStateMachine::new(Duration::default()),
+    };
+  }
 }
 
 impl Protocol for GPTP
@@ -51,10 +68,14 @@ impl Protocol for GPTP
     // FIX: apply mask to set upper 4 bits to 0s.
     // Validate message type.
     let message_type = MessageType::from_u8(payload[0] & 0b0000_1111)?;
+    // FIX: some messages don't seem to be decoded correctly. Array out of bounds error.
     dbg!{&message_type};
 
     // TODO: make this work
     let message = GPTPMesage::new(message_type, payload)?;
+    dbg!{&message};
+
+    self.md_sync_receive_state_machine.change_state(packet.timestamp, message)?;
 
     return Ok(());
   }
