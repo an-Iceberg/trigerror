@@ -42,7 +42,7 @@ impl MDSyncReceiveStateMachine
   {
     let result;
 
-    // dbg!{(&self.state, &message)};
+    // TODO: time calculation is way off.
 
     match (&self.state, message)
     {
@@ -54,6 +54,7 @@ impl MDSyncReceiveStateMachine
       ) =>
       {
         // TODO: initialize the state machine.
+        self.last_message_timestamp = timestamp;
         self.message_interval = header.message_interval();
         result = Ok(());
       },

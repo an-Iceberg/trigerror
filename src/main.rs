@@ -13,6 +13,29 @@ fn main()
   // dbg!{result};
   // exit(-1);
 
+  // d = height of the dog
+  // p = height of the pole
+  // p - d = 200cm
+  // p + d = 300cm
+  // Matrix A = [1,-1;1,1]
+  // Vector b = [200;300]
+  // Solve: A*x = b, x = [p;d]
+  // Solution: p = 250, d = 50
+
+  // println!("{}", 1_000_000.to_string()
+  //   .as_bytes()
+  //   .rchunks(3)
+  //   .rev()
+  //   .map(std::str::from_utf8)
+  //   .collect::<Result<Vec<&str>, _>>()
+  //   .unwrap()
+  //   .join("_")
+  // );
+
+  // println!("{}", (Duration::from_micros(5) + Duration::from_micros(350).mul_f64(0.7)).as_micros());
+
+  // exit(32);
+
   let cli = CLI::parse();
 
   if cli.create_default_config

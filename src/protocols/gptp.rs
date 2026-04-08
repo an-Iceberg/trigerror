@@ -63,8 +63,8 @@ impl Protocol for GPTP
 
     let payload = &packet.data[14..];
 
-    payload.iter()
-      .for_each(|byte| print!("{byte:02x} "));
+    // payload.iter()
+    //   .for_each(|byte| print!("{byte:02x} "));
 
     // NOTE: do we need to reverse the bits with .reverse_bits()?
     // FIX: don't right shift!
@@ -85,8 +85,8 @@ impl Protocol for GPTP
       _ => ()
     }
 
-    println!();
-    println!();
+    // println!();
+    // println!();
 
     return Ok(());
   }
