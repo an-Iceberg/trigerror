@@ -5,7 +5,9 @@ use super::header::Header;
 
 // TODO: reverse byte order.
 
-// TODO: debug print as hex numbers
+// TODO: debug print as hex numbers.
+
+// TODO: add reserved fields.
 
 #[derive(Debug)]
 pub enum GPTPMesage
@@ -48,7 +50,7 @@ pub enum GPTPMesage
   {
     // TODO: header 11.4.2
     header: Header,
-    // reserved: [Octet; 10]
+    reserved: [Octet; 10]
   },
   FollowUp
   {
@@ -89,14 +91,17 @@ impl GPTPMesage
     {
       return Err(format!(
         "payload is not long enough. Is: {}, should: {}.",
+        payload.len(),
         header.message_length(),
-        payload.len()
       ));
     }
+
+    dbg!{header.message_length()};
 
     return match message_type
     {
       // TODO: use Flags to determine 1 or 2 step sync (Flags.two_step).
+      // NOTE: this will fix our index out of bounds panic.
       MessageType::Sync =>
       Ok(GPTPMesage::Sync1Step
       {

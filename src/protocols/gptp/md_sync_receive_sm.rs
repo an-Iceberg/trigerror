@@ -1,6 +1,7 @@
 use std::time::Duration;
 use crate::protocols::gptp::message::GPTPMesage;
 
+#[derive(Debug)]
 enum State
 {
   WaitingForFollowUp,
@@ -41,12 +42,14 @@ impl MDSyncReceiveStateMachine
   {
     let result;
 
+    // dbg!{(&self.state, &message)};
+
     match (&self.state, message)
     {
       (
         &State::Uninitialized,
         GPTPMesage::Sync1Step { header, .. }
-        | GPTPMesage::Sync2Step { header }
+        | GPTPMesage::Sync2Step { header, .. }
         | GPTPMesage::FollowUp { header }
       ) =>
       {
@@ -83,7 +86,7 @@ impl MDSyncReceiveStateMachine
         self.message_interval = header.message_interval();
       },
 
-      (&State::WaitingForSync, GPTPMesage::Sync2Step { header }) =>
+      (&State::WaitingForSync, GPTPMesage::Sync2Step { header, .. }) =>
       {
         self.state = State::WaitingForFollowUp;
 
