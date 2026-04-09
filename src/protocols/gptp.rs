@@ -5,7 +5,6 @@ pub mod message;
 pub mod md_sync_receive_sm;
 
 use std::time::Duration;
-
 use pcap_file::pcap::PcapPacket;
 use crate::{bytes_to_u16, protocols::{Protocol, gptp::{md_sync_receive_sm::MDSyncReceiveStateMachine, message::GPTPMesage, message_type::MessageType}}};
 
@@ -23,7 +22,7 @@ impl GPTP
     return GPTP
     {
       count: 0,
-      md_sync_receive_state_machine: MDSyncReceiveStateMachine::new(Duration::from_millis(125))
+      md_sync_receive_state_machine: MDSyncReceiveStateMachine::new()
     };
   }
 }
@@ -35,7 +34,7 @@ impl Default for GPTP
     return GPTP
     {
       count: u32::default(),
-      md_sync_receive_state_machine: MDSyncReceiveStateMachine::new(Duration::default()),
+      md_sync_receive_state_machine: MDSyncReceiveStateMachine::new(),
     };
   }
 }

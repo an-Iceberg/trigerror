@@ -9,6 +9,11 @@ enum State
   Uninitialized,
 }
 
+impl Default for State
+{
+  fn default() -> Self { return State::Uninitialized; }
+}
+
 // Sync and follow up
 // TODO: wait for sync messages (messageType == Sync) and then for follow up (messageType == follow up)
 // NOTE: log_message_interval
@@ -19,6 +24,7 @@ enum State
 // NOTE: if first is followup, just ignore.
 // NOTE: Uninit -> Sync received. all follow ups are ignored and state machine is not advanced.
 
+#[derive(Default)]
 pub struct MDSyncReceiveStateMachine
 {
   state: State,
@@ -29,22 +35,13 @@ pub struct MDSyncReceiveStateMachine
 
 impl MDSyncReceiveStateMachine
 {
-  pub fn new(log_message_interval: Duration) -> Self
-  {
-    return MDSyncReceiveStateMachine
-    {
-      state: State::Uninitialized,
-      message_interval: log_message_interval,
-      last_message_timestamp: Duration::default(),
-      margin: 0.3,
-    };
-  }
+  pub fn new() -> Self { return Default::default(); }
 
   pub fn change_state(&mut self, timestamp: Duration, message: GPTPMesage) -> Result<(), String>
   {
     let result;
 
-    // TODO: time calculation is way off.
+    // TODO: better structure!
 
     match (&self.state, message)
     {
@@ -52,7 +49,6 @@ impl MDSyncReceiveStateMachine
         &State::Uninitialized,
         GPTPMesage::Sync1Step { header, .. }
         | GPTPMesage::Sync2Step { header, .. }
-        // | GPTPMesage::FollowUp { header }
       ) =>
       {
         // TODO: initialize the state machine.
@@ -62,11 +58,17 @@ impl MDSyncReceiveStateMachine
         result = Ok(());
       },
 
+      (&State::Uninitialized, GPTPMesage::FollowUp { .. }) =>
+      {
+        // We don't care about this case.
+        result = Ok(());
+      }
+
       (&State::WaitingForSync, GPTPMesage::Sync1Step { header, .. }) =>
       {
         // FIX: for 1 step there's no follow up.
         // NOTE: sync1 -> sync1 -> sync1 …
-        self.state = State::WaitingForFollowUp;
+        self.state = State::WaitingForSync;
 
         match is_on_time(
           self.last_message_timestamp,
@@ -93,6 +95,7 @@ impl MDSyncReceiveStateMachine
 
       (&State::WaitingForSync, GPTPMesage::Sync2Step { header, .. }) =>
       {
+        // NOTE: sync2 -> followup -> sync2 -> followup -> sync2 -> followup -> …
         self.state = State::WaitingForFollowUp;
 
         match is_on_time(
@@ -120,6 +123,7 @@ impl MDSyncReceiveStateMachine
 
       (&State::WaitingForFollowUp, GPTPMesage::FollowUp { header }) =>
       {
+        // NOTE: sync2 -> followup -> sync2 -> followup -> sync2 -> followup -> …
         self.state = State::WaitingForSync;
 
         match is_on_time(
@@ -146,7 +150,10 @@ impl MDSyncReceiveStateMachine
       },
 
       // TODO: better error message 😆.
-      _ => result = Err("wtf⁈".to_string())
+      (state, message) =>
+      {
+        todo!()
+      }
     };
 
     self.last_message_timestamp = timestamp;

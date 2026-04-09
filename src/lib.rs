@@ -6,6 +6,7 @@ pub mod config;
 pub mod constants;
 pub mod protocols;
 pub mod octet;
+pub mod time_result;
 
 use chrono::{DateTime, Utc};
 use colored::Colorize;
