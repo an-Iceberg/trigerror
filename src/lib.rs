@@ -75,7 +75,8 @@ pub fn get_timestamp() -> String
   let system_time = SystemTime::now();
   let datetime: DateTime<Utc> = system_time.into();
   // NOTE: see if the "%f" works.
-  return datetime.format("%Y-%m-%d_%T%.f").to_string();
+  return datetime.format("%Y-%m-%d_%T").to_string();
+  // return datetime.format("%Y-%m-%d_%T%.f").to_string();
   // This might be how to get milliseconds to show up.
   // return datetime.format("%Y-%m-%d_%T.%.5f").to_string();
 }
@@ -85,6 +86,44 @@ pub fn get_timestamp() -> String
 /// [source](https://stackoverflow.com/questions/50243866/how-do-i-convert-two-u8-primitives-into-a-u16-primitive#answer-50244328)
 pub fn bytes_to_u16(first_byte: u8, second_byte: u8) -> u16
 { return ((first_byte as u16) << 8) | second_byte as u16; }
+
+pub enum TimeResult
+{
+  TooEarly(Duration),
+  TooLate(Duration),
+  Ok
+}
+
+pub fn is_on_time(
+  last_message_timestamp: Duration,
+  current_message_timestamp: Duration,
+  message_interval: Duration,
+  margin: f64
+) -> TimeResult
+{
+  /*
+   last_message_timestamp                    current_message_timestamp
+     │                                                  │
+   ──┼──────────────────────────────────────────────────┼──────────────────> time
+     │                                                  │
+     ┊                                                  ┊
+     ┊         message_interval                         ┊
+     ├───────────────────────────────┤                  ┊
+     ┊                             margin               ┊
+     ┊                         ├───────────┤            ┊
+     ┊                                                  ┊
+  */
+
+  let lower_bound = last_message_timestamp + message_interval.mul_f64(1. - margin);
+  let upper_bound = last_message_timestamp + message_interval.mul_f64(1. + margin);
+
+  if current_message_timestamp < lower_bound
+  { return TimeResult::TooEarly(lower_bound.abs_diff(current_message_timestamp)); }
+  else if upper_bound < current_message_timestamp
+  { return TimeResult::TooLate(upper_bound.abs_diff(current_message_timestamp)); }
+  else
+  { return TimeResult::Ok; }
+}
 
 pub fn create_capture_device(config: &Config) -> Capture<Active>
 {

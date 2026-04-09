@@ -66,17 +66,11 @@ impl Protocol for GPTP
     // payload.iter()
     //   .for_each(|byte| print!("{byte:02x} "));
 
-    // NOTE: do we need to reverse the bits with .reverse_bits()?
-    // FIX: don't right shift!
-    // FIX: apply mask to set upper 4 bits to 0s.
     // Validate message type.
     let message_type = MessageType::from_u8(payload[0] & 0b0000_1111)?;
-    // FIX: some messages don't seem to be decoded correctly. Array out of bounds error.
-    // dbg!{&message_type};
+    // println!("payload[0] = {:0X}, {:?}", payload[0] & 0b0000_1111, message_type);
 
-    // TODO: make this work
     let message = GPTPMesage::new(message_type, payload)?;
-    // dbg!{&message};
 
     match message_type
     {
@@ -84,9 +78,6 @@ impl Protocol for GPTP
         self.md_sync_receive_state_machine.change_state(packet.timestamp, message)?,
       _ => ()
     }
-
-    // println!();
-    // println!();
 
     return Ok(());
   }

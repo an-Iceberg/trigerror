@@ -1,5 +1,5 @@
 use std::time::Duration;
-use crate::protocols::gptp::message::GPTPMesage;
+use crate::{TimeResult, is_on_time, protocols::gptp::message::GPTPMesage};
 
 #[derive(Debug)]
 enum State
@@ -16,6 +16,8 @@ enum State
 // TODO: time margin 30%
 // Sync timeout, frame comes periodically, record when packet is missing (datafield last_sync_timer)
 // Figure 11-6
+// NOTE: if first is followup, just ignore.
+// NOTE: Uninit -> Sync received. all follow ups are ignored and state machine is not advanced.
 
 pub struct MDSyncReceiveStateMachine
 {
@@ -31,7 +33,7 @@ impl MDSyncReceiveStateMachine
   {
     return MDSyncReceiveStateMachine
     {
-      state: State::WaitingForSync,
+      state: State::Uninitialized,
       message_interval: log_message_interval,
       last_message_timestamp: Duration::default(),
       margin: 0.3,
@@ -50,39 +52,41 @@ impl MDSyncReceiveStateMachine
         &State::Uninitialized,
         GPTPMesage::Sync1Step { header, .. }
         | GPTPMesage::Sync2Step { header, .. }
-        | GPTPMesage::FollowUp { header }
+        // | GPTPMesage::FollowUp { header }
       ) =>
       {
         // TODO: initialize the state machine.
         self.last_message_timestamp = timestamp;
         self.message_interval = header.message_interval();
+        self.state = State::WaitingForFollowUp;
         result = Ok(());
       },
 
       (&State::WaitingForSync, GPTPMesage::Sync1Step { header, .. }) =>
       {
+        // FIX: for 1 step there's no follow up.
+        // NOTE: sync1 -> sync1 -> sync1 …
         self.state = State::WaitingForFollowUp;
 
-        // Verify that message is within specified time
-        if self.last_message_timestamp + self.message_interval.mul_f64(1.0 - self.margin) < timestamp
+        match is_on_time(
+          self.last_message_timestamp,
+          timestamp,
+          self.message_interval,
+          self.margin)
         {
-          result = Err(format!(
-            "1 step sync came in {}μs too early.",
-            (self.last_message_timestamp + self.message_interval.mul_f64(1.0 - self.margin))
-              .abs_diff(timestamp)
-              .as_micros(),
-          ));
+          TimeResult::TooEarly(duration) =>
+          {
+            result = Err(format!("1 step sync came in {:.3}ms too early.", duration.as_micros() as f64 / 1_000.));
+          },
+          TimeResult::TooLate(duration) =>
+          {
+            result = Err(format!("1 step sync cane in {:.3}ms too late.", duration.as_micros() as f64 / 1_000.));
+          },
+          TimeResult::Ok =>
+          {
+            result = Ok(());
+          }
         }
-        else if self.last_message_timestamp + self.message_interval.mul_f64(1.0 + self.margin) > timestamp
-        {
-          result = Err(format!(
-            "1 step sync came in {}μs too late.",
-            (self.last_message_timestamp + self.message_interval.mul_f64(1.0 + self.margin))
-              .abs_diff(timestamp)
-              .as_micros(),
-          ));
-        }
-        else { result = Ok(()); }
 
         self.message_interval = header.message_interval();
       },
@@ -91,26 +95,25 @@ impl MDSyncReceiveStateMachine
       {
         self.state = State::WaitingForFollowUp;
 
-        // Verify that message is within specified time
-        if self.last_message_timestamp + self.message_interval.mul_f64(1.0 - self.margin) < timestamp
+        match is_on_time(
+          self.last_message_timestamp,
+          timestamp,
+          self.message_interval,
+          self.margin)
         {
-          result = Err(format!(
-            "2 step sync came in {}μs too early.",
-            (self.last_message_timestamp + self.message_interval.mul_f64(1.0 - self.margin))
-              .abs_diff(timestamp)
-              .as_micros(),
-          ));
+          TimeResult::TooEarly(duration) =>
+          {
+            result = Err(format!("2 step sync came in {:.3}ms too early.", duration.as_micros() as f64 / 1_000.));
+          },
+          TimeResult::TooLate(duration) =>
+          {
+            result = Err(format!("2 step sync came in {:.3}ms too late.", duration.as_micros() as f64 / 1_000.));
+          },
+          TimeResult::Ok =>
+          {
+            result = Ok(());
+          }
         }
-        else if self.last_message_timestamp + self.message_interval.mul_f64(1.0 + self.margin) > timestamp
-        {
-          result = Err(format!(
-            "2 step sync came in {}μs too late.",
-            (self.last_message_timestamp + self.message_interval.mul_f64(1.0 + self.margin))
-              .abs_diff(timestamp)
-              .as_micros(),
-          ));
-        }
-        else { result = Ok(()); }
 
         self.message_interval = header.message_interval();
       },
@@ -119,26 +122,25 @@ impl MDSyncReceiveStateMachine
       {
         self.state = State::WaitingForSync;
 
-        // Verify that message is within specified time
-        if self.last_message_timestamp + self.message_interval.mul_f64(1.0 - self.margin) < timestamp
+        match is_on_time(
+          self.last_message_timestamp,
+          timestamp,
+          self.message_interval,
+          self.margin)
         {
-          result = Err(format!(
-            "follow up came in {}μs too early.",
-            (self.last_message_timestamp + self.message_interval.mul_f64(1.0 - self.margin))
-              .abs_diff(timestamp)
-              .as_micros(),
-          ));
+          TimeResult::TooEarly(duration) =>
+          {
+            result = Err(format!("follow up came in {:.3}ms too early.", duration.as_micros() as f64 / 1_000.));
+          },
+          TimeResult::TooLate(duration) =>
+          {
+            result = Err(format!("follow up cane in {:.3}ms too late.", duration.as_micros() as f64 / 1_000.));
+          },
+          TimeResult::Ok =>
+          {
+            result = Ok(());
+          }
         }
-        else if self.last_message_timestamp + self.message_interval.mul_f64(1.0 + self.margin) > timestamp
-        {
-          result = Err(format!(
-            "follow up came in {}μs too late.",
-            (self.last_message_timestamp + self.message_interval.mul_f64(1.0 + self.margin))
-              .abs_diff(timestamp)
-              .as_micros(),
-          ));
-        }
-        else { result = Ok(()); }
 
         self.message_interval = header.message_interval();
       },

@@ -6,10 +6,10 @@ use super::message_type::MessageType;
 #[derive(Debug)]
 pub struct Header
 {
+  major_s_do_id: Octet,
   message_type: MessageType,
-  major_sd_old: Octet,
-  version_ptp: Octet,
   minor_version_ptp: Octet,
+  version_ptp: Octet,
   message_length: u16,
   domain_number: Octet,
   minor_sd_old: Octet,
@@ -19,7 +19,7 @@ pub struct Header
   source_port_identity: [Octet; 10],
   sequence_id: [Octet; 2],
   control_field: Octet,
-  log_message_interval: Octet,
+  log_message_interval: i8,
 }
 
 impl Header
@@ -28,13 +28,10 @@ impl Header
   {
     return Header
     {
+      major_s_do_id: payload[0] >> 4,
       message_type,
-      // TODO: this needs to be reworked. It might be the source of our error.
-      // We only care about the last 4 bits.
-      major_sd_old: payload[0] & 0b0000_1111,
-      // We only care about the first 4 bits.
-      version_ptp: payload[1] & 0b1111_0000,
-      minor_version_ptp: payload[1] & 0b0000_1111,
+      minor_version_ptp: payload[1] >> 4,
+      version_ptp: payload[1] & 0b0000_1111,
       message_length: bytes_to_u16(payload[2], payload[3]),
       domain_number: payload[4],
       minor_sd_old: payload[5],
@@ -72,12 +69,12 @@ impl Header
         payload[31],
       ],
       control_field: payload[32],
-      log_message_interval: payload[33],
+      log_message_interval: payload[33] as i8,
     };
   }
 
   pub fn message_type(&self) -> &MessageType { return &self.message_type; }
-  pub fn major_sd_old(&self) -> Octet { return self.major_sd_old; }
+  pub fn major_sd_old(&self) -> Octet { return self.major_s_do_id; }
   pub fn version_ptp(&self) -> Octet { return self.version_ptp; }
   pub fn minor_version_ptp(&self) -> Octet { return self.minor_version_ptp; }
   pub fn message_length(&self) -> u16 { return self.message_length; }
@@ -92,11 +89,13 @@ impl Header
 
   /// From 10.3.10.7:
   /// > The current value of the logarithm of base 2 of the mean time interval \[…].
-  pub fn log_message_interval(&self) -> Octet { return self.log_message_interval; }
+  pub fn log_message_interval(&self) -> i8 { return self.log_message_interval; }
 
   /// Returns the expected time interval until the next message as a `std::time::Duration`.
+  ///
+  /// This performs 2^`self.log_message_interval`.
   pub fn message_interval(&self) -> Duration
-  { return Duration::from_secs((self.log_message_interval as u64).pow(2)); }
+  { return Duration::from_secs_f64(2_f64.powi(self.log_message_interval as i32)); }
 }
 
 impl Display for Header
