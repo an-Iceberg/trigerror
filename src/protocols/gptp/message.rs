@@ -82,6 +82,21 @@ pub enum GPTPMesage
 
 impl GPTPMesage
 {
+  pub fn header(&self) -> &Header
+  {
+    return match self
+    {
+        GPTPMesage::Announce { header, .. } => header,
+        GPTPMesage::Signaling { header, .. } => header,
+        GPTPMesage::Sync1Step { header, .. } => header,
+        GPTPMesage::Sync2Step { header, .. } => header,
+        GPTPMesage::FollowUp { header } => header,
+        GPTPMesage::PeerDelayRequest { header } => header,
+        GPTPMesage::PeerDelayResponse { header, .. } => header,
+        GPTPMesage::PeerDelayResponseFollowUp { header, .. } => header,
+    };
+  }
+
   // FIX: check that the payload is long enough! Some packets don't seem to be long enough.
   /// Takes the message type and the ethernet payload and constructs a PTP message.
   pub fn new(message_type: MessageType, payload: &[u8]) -> Result<Self, String>
@@ -96,35 +111,16 @@ impl GPTPMesage
       ));
     }
 
-    // dbg!{header.message_length()};
-
     return match message_type
     {
-      // TODO: use Flags to determine 1 or 2 step sync (Flags.two_step).
-      // NOTE: this will fix our index out of bounds panic.
-      MessageType::Sync =>
-      {
-        if header.flags().two_step() { Ok(Self::new_sync_2_step(header, payload)) }
-        else { Ok(Self::new_sync_1_step(header, payload)) }
-      }
-
-      MessageType::PeerDelayRequest =>
-      Ok(Self::new_peer_delay_request(header, payload)),
-
-      MessageType::PeerDelayResponse =>
-      Ok(Self::new_peer_delay_response(header, payload)),
-
-      MessageType::FollowUp =>
-      Ok(Self::new_follow_up(header, payload)),
-
-      MessageType::PeerDelayResponseFollowUp =>
-      Ok(Self::new_peer_delay_response_follow_up(header, payload)),
-
-      MessageType::Announce =>
-      Ok(Self::new_announce(header, payload)),
-
-      MessageType::Signaling =>
-      Ok(Self::new_signaling(header, payload)),
+      MessageType::Sync1Step => Ok(Self::new_sync_1_step(header, payload)),
+      MessageType::Sync2Step => Ok(Self::new_sync_2_step(header, payload)),
+      MessageType::PeerDelayRequest => Ok(Self::new_peer_delay_request(header, payload)),
+      MessageType::PeerDelayResponse => Ok(Self::new_peer_delay_response(header, payload)),
+      MessageType::FollowUp => Ok(Self::new_follow_up(header, payload)),
+      MessageType::PeerDelayResponseFollowUp => Ok(Self::new_peer_delay_response_follow_up(header, payload)),
+      MessageType::Announce => Ok(Self::new_announce(header, payload)),
+      MessageType::Signaling => Ok(Self::new_signaling(header, payload)),
     };
   }
 

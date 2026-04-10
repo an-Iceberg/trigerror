@@ -7,10 +7,11 @@ use crate::{cli::CLI, constants::{
   DEFAULT_RETRIGGER,
   DEFAULT_TIME_AFTER,
   DEFAULT_TIME_BEFORE,
-}};
+}, utils::OutFormat};
 use colored::Colorize;
 use ini::ini;
 
+// TODO: make these fields read only and add getters.
 /// The configuration parameters for a recording.
 #[derive(Debug, Clone)]
 pub struct Config
@@ -35,6 +36,8 @@ pub struct Config
   pub retrigger: bool,
   /// The maximum amount of errors that should be recorded.
   pub max_retriggers: u32,
+  /// The file format where the errors are documented.
+  pub out_format: OutFormat,
 }
 
 impl Default for Config
@@ -53,6 +56,7 @@ impl Default for Config
       file_size: DEFAULT_FILE_SIZE,
       retrigger: DEFAULT_RETRIGGER,
       max_retriggers: DEFAULT_MAX_RETRIGGERS,
+      out_format: OutFormat::default()
     };
   }
 }

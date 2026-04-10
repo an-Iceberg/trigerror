@@ -1,17 +1,28 @@
-use std::time::Duration;
-use crate::{TimeResult, is_on_time, protocols::gptp::message::GPTPMesage};
+use std::{fmt::Display, time::Duration};
+use crate::{duration_to_string, is_on_time, protocols::gptp::{message::GPTPMesage, message_type::MessageType}};
 
-#[derive(Debug)]
+#[derive(Debug, Default, Clone, Copy)]
 enum State
 {
   WaitingForFollowUp,
-  WaitingForSync,
+  WaitingForSync1Step,
+  WaitingForSync2Step,
+  #[default]
   Uninitialized,
 }
 
-impl Default for State
+impl Display for State
 {
-  fn default() -> Self { return State::Uninitialized; }
+  fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+  {
+    return formatter.write_str(match self
+    {
+      State::WaitingForFollowUp => "WaitingForFollowUp",
+      Self::WaitingForSync1Step => "WaitingFor1StepSync",
+      Self::WaitingForSync2Step => "WaitingFor2StepSync",
+      State::Uninitialized => "Uninitialized",
+    });
+  }
 }
 
 // Sync and follow up
@@ -24,140 +35,144 @@ impl Default for State
 // NOTE: if first is followup, just ignore.
 // NOTE: Uninit -> Sync received. all follow ups are ignored and state machine is not advanced.
 
-#[derive(Default)]
 pub struct MDSyncReceiveStateMachine
 {
   state: State,
+
   message_interval: Duration,
   last_message_timestamp: Duration,
   margin: f64,
+}
+
+impl Default for MDSyncReceiveStateMachine
+{
+  fn default() -> Self
+  {
+    return MDSyncReceiveStateMachine
+    {
+      state: State::default(),
+      message_interval: Duration::default(),
+      last_message_timestamp: Duration::default(),
+      margin: 0.3,
+    };
+  }
 }
 
 impl MDSyncReceiveStateMachine
 {
   pub fn new() -> Self { return Default::default(); }
 
-  pub fn change_state(&mut self, timestamp: Duration, message: GPTPMesage) -> Result<(), String>
+  pub fn validate_state(&mut self, message_type: MessageType) -> Result<(), String>
   {
-    let result;
+    // NOTE: in Rust it is a generally discouraged to import enum variants by name b/c
+    // NOTE: name space pollution could happen easily which could lead to footguns. Here it is
+    // NOTE: used so that the state transitions are more easy to read.
+    use State::{Uninitialized, WaitingForSync1Step, WaitingForSync2Step, WaitingForFollowUp};
+    use MessageType::{Sync1Step, Sync2Step, FollowUp};
 
-    // TODO: better structure!
+    /*
+    There are 2 lanes:
+    1StepSync -> 1StepSync -> 1StepSync -> …
+    or
+    2StepSync -> FollowUp -> 2StepSync -> FollowUp -> 2StepSync -> FollowUp -> …
+    Changing from one lane to the other is an error. But if such a thing happens then we do
+    update the state to that new lane.
+    TODO: ask about FollowUp -> 1StepSync
+    TODO: do we need to keep track of which lane we're in?
+    */
 
-    match (&self.state, message)
+    // This is ugly b/c the protocol has a weird structure. In the message type field there's no
+    // distinction between 1-Step Sync and 2-Step Sync.
+    return match (self.state, message_type)
     {
-      (
-        &State::Uninitialized,
-        GPTPMesage::Sync1Step { header, .. }
-        | GPTPMesage::Sync2Step { header, .. }
-      ) =>
-      {
-        // TODO: initialize the state machine.
-        self.last_message_timestamp = timestamp;
-        self.message_interval = header.message_interval();
-        self.state = State::WaitingForFollowUp;
-        result = Ok(());
-      },
+      // Expected state changes.
+      (Uninitialized, FollowUp) => { Ok(()) } // We don't care about this case.
+      (Uninitialized, Sync1Step) => { self.state = WaitingForSync1Step; Ok(()) }
+      (Uninitialized, Sync2Step) => { self.state = WaitingForFollowUp; Ok(()) }
+      (WaitingForSync1Step, Sync1Step) => { Ok(()) }
+      (WaitingForSync2Step, Sync2Step) => { self.state = WaitingForFollowUp; Ok(()) }
+      (WaitingForFollowUp, FollowUp) => { self.state = WaitingForSync2Step; Ok(()) }
 
-      (&State::Uninitialized, GPTPMesage::FollowUp { .. }) =>
+      // Unexpected state changes.
+      (WaitingForSync1Step, FollowUp) =>
       {
-        // We don't care about this case.
-        result = Ok(());
+        self.state = WaitingForSync2Step;
+        Err("Waiting for Sync1Step but got FollowUp".to_string())
+      }
+      (WaitingForSync1Step, Sync2Step) =>
+      {
+        self.state = WaitingForFollowUp;
+        Err("Waiting for Sync1Step but got Sync2Step".to_string())
+      }
+      (WaitingForSync2Step, FollowUp) =>
+      {
+        Err("Waiting for Sync2Step but got FollowUp".to_string())
+      }
+      (WaitingForSync2Step, Sync1Step) =>
+      {
+        self.state = WaitingForSync1Step;
+        Err("Waiting for Sync2Step but got Sync1Step".to_string())
       }
 
-      (&State::WaitingForSync, GPTPMesage::Sync1Step { header, .. }) =>
-      {
-        // FIX: for 1 step there's no follow up.
-        // NOTE: sync1 -> sync1 -> sync1 …
-        self.state = State::WaitingForSync;
-
-        match is_on_time(
-          self.last_message_timestamp,
-          timestamp,
-          self.message_interval,
-          self.margin)
-        {
-          TimeResult::TooEarly(duration) =>
-          {
-            result = Err(format!("1 step sync came in {:.3}ms too early.", duration.as_micros() as f64 / 1_000.));
-          },
-          TimeResult::TooLate(duration) =>
-          {
-            result = Err(format!("1 step sync cane in {:.3}ms too late.", duration.as_micros() as f64 / 1_000.));
-          },
-          TimeResult::Ok =>
-          {
-            result = Ok(());
-          }
-        }
-
-        self.message_interval = header.message_interval();
-      },
-
-      (&State::WaitingForSync, GPTPMesage::Sync2Step { header, .. }) =>
-      {
-        // NOTE: sync2 -> followup -> sync2 -> followup -> sync2 -> followup -> …
-        self.state = State::WaitingForFollowUp;
-
-        match is_on_time(
-          self.last_message_timestamp,
-          timestamp,
-          self.message_interval,
-          self.margin)
-        {
-          TimeResult::TooEarly(duration) =>
-          {
-            result = Err(format!("2 step sync came in {:.3}ms too early.", duration.as_micros() as f64 / 1_000.));
-          },
-          TimeResult::TooLate(duration) =>
-          {
-            result = Err(format!("2 step sync came in {:.3}ms too late.", duration.as_micros() as f64 / 1_000.));
-          },
-          TimeResult::Ok =>
-          {
-            result = Ok(());
-          }
-        }
-
-        self.message_interval = header.message_interval();
-      },
-
-      (&State::WaitingForFollowUp, GPTPMesage::FollowUp { header }) =>
-      {
-        // NOTE: sync2 -> followup -> sync2 -> followup -> sync2 -> followup -> …
-        self.state = State::WaitingForSync;
-
-        match is_on_time(
-          self.last_message_timestamp,
-          timestamp,
-          self.message_interval,
-          self.margin)
-        {
-          TimeResult::TooEarly(duration) =>
-          {
-            result = Err(format!("follow up came in {:.3}ms too early.", duration.as_micros() as f64 / 1_000.));
-          },
-          TimeResult::TooLate(duration) =>
-          {
-            result = Err(format!("follow up cane in {:.3}ms too late.", duration.as_micros() as f64 / 1_000.));
-          },
-          TimeResult::Ok =>
-          {
-            result = Ok(());
-          }
-        }
-
-        self.message_interval = header.message_interval();
-      },
-
-      // TODO: better error message 😆.
-      (state, message) =>
-      {
-        todo!()
-      }
+      // Catchall
+      (state, message_type) => Err(format!(
+        "Unknown state and message combination: state: {state}, message type: {message_type:?}"
+      ))
     };
+  }
 
-    self.last_message_timestamp = timestamp;
+  pub fn validate_timing(
+    &mut self,
+    current_message_timestamp: Duration,
+    new_message_interval: Duration,
+    message_type: MessageType,
+  ) -> Result<(), String>
+  {
+    /*
+     last_message_timestamp                    current_message_timestamp
+       │                                                  │
+     ──┼──────────────────────────────────────────────────┼──────────────────> time
+       │                                                  │
+       ┊                                                  ┊
+       ┊         message_interval                         ┊
+       ├───────────────────────────────┤                  ┊
+       ┊                             margin               ┊
+       ┊                         ├───────────┤            ┊
+       ┊                                                  ┊
+    */
 
-    return result;
+    // Calculate relevant values.
+    let lower_bound = self.last_message_timestamp + self.message_interval.mul_f64(1. - self.margin);
+    let upper_bound = self.last_message_timestamp + self.message_interval.mul_f64(1. + self.margin);
+
+    // Update state.
+    self.last_message_timestamp = current_message_timestamp;
+    self.message_interval = new_message_interval;
+
+    // Return result.
+    if current_message_timestamp < lower_bound
+    {
+      let diff = current_message_timestamp.abs_diff(lower_bound).as_micros() as f64 / 1_000.;
+
+      return Err(format!(
+        "{message_type:?} came in {:.3}ms too early. Lower bound: {}, actual: {}",
+        diff,
+        duration_to_string(lower_bound),
+        duration_to_string(current_message_timestamp)
+      ));
+    }
+    else if upper_bound < current_message_timestamp
+    {
+      let diff = upper_bound.abs_diff(current_message_timestamp).as_micros() as f64 / 1_000.;
+
+      return Err(format!(
+        "{message_type:?} came in {:.3}ms too late. Upper bound: {}, actual: {}",
+        diff,
+        duration_to_string(upper_bound),
+        duration_to_string(current_message_timestamp)
+      ));
+    }
+
+    return Ok(());
   }
 }

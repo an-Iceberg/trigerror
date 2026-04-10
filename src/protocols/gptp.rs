@@ -6,8 +6,9 @@ pub mod md_sync_receive_sm;
 
 use std::time::Duration;
 use pcap_file::pcap::PcapPacket;
-use crate::{bytes_to_u16, protocols::{Protocol, gptp::{md_sync_receive_sm::MDSyncReceiveStateMachine, message::GPTPMesage, message_type::MessageType}}};
+use crate::{bytes_to_u16, get_bit, protocols::{Protocol, gptp::{md_sync_receive_sm::MDSyncReceiveStateMachine, message::GPTPMesage, message_type::MessageType}}};
 
+#[derive(Default)]
 pub struct GPTP
 {
   // TODO: state machines for message types with persistent states.
@@ -23,18 +24,6 @@ impl GPTP
     {
       count: 0,
       md_sync_receive_state_machine: MDSyncReceiveStateMachine::new()
-    };
-  }
-}
-
-impl Default for GPTP
-{
-  fn default() -> Self
-  {
-    return GPTP
-    {
-      count: u32::default(),
-      md_sync_receive_state_machine: MDSyncReceiveStateMachine::new(),
     };
   }
 }
@@ -65,18 +54,39 @@ impl Protocol for GPTP
     // payload.iter()
     //   .for_each(|byte| print!("{byte:02x} "));
 
+    // TODO: verify, that this works.
     // Validate message type.
-    let message_type = MessageType::from_u8(payload[0] & 0b0000_1111)?;
+    let message_type = MessageType::from_u8(
+      payload[0] & 0b0000_1111,
+      get_bit(payload[6], 1)
+    )?;
     // println!("payload[0] = {:0X}, {:?}", payload[0] & 0b0000_1111, message_type);
 
     let message = GPTPMesage::new(message_type, payload)?;
 
-    match message_type
-    {
-      MessageType::Sync | MessageType::FollowUp =>
-        self.md_sync_receive_state_machine.change_state(packet.timestamp, message)?,
-      _ => ()
-    }
+    // TODO: domain nr. (probably with a HashMap (use hashbrown as needed)).
+    // TODO: ethernet source address
+
+    message.header();
+
+    // match message_type
+    // {
+    //   MessageType::Sync1Step | MessageType::Sync2Step | MessageType::FollowUp =>
+    //     self.md_sync_receive_state_machine.validate(packet.timestamp, message)?,
+    //   _ => ()
+    // }
+
+    // match message
+    // {
+    //   GPTPMesage::Announce { header, current_utc_offset, grandmaster_priority_1, grandmaster_clock_quality, grandmaster_priority_2, grandmaster_identity, steps_removed, time_source, tlv_type, length_field, path_sequence } => todo!(),
+    //   GPTPMesage::Signaling { header, target_port_identity } => todo!(),
+    //   GPTPMesage::Sync1Step { header, origin_timestamp, tlv_type, length_field, organization_id, organization_sub_type, cumulative_scaled_rate_offset, gm_time_base_indicator, last_gm_phase_change, scaled_last_gm_frequency_change } => todo!(),
+    //   GPTPMesage::Sync2Step { header, reserved } => todo!(),
+    //   GPTPMesage::FollowUp { header } => todo!(),
+    //   GPTPMesage::PeerDelayRequest { header } => todo!(),
+    //   GPTPMesage::PeerDelayResponse { header, request_receipt_timestamp, requesting_port_identity } => todo!(),
+    //   GPTPMesage::PeerDelayResponseFollowUp { header, response_origin_timestamp, requesting_port_identity } => todo!(),
+    // }
 
     return Ok(());
   }

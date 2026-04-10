@@ -3,22 +3,24 @@ use std::fmt::{Debug, Display};
 #[derive(Clone, Copy)]
 pub enum MessageType
 {
-  Sync = 0x0,
-  PeerDelayRequest = 0x2,
-  PeerDelayResponse = 0x3,
-  FollowUp = 0x8,
-  PeerDelayResponseFollowUp = 0xA,
-  Announce = 0xB,
-  Signaling = 0xC,
+  Sync1Step,
+  Sync2Step,
+  PeerDelayRequest,
+  PeerDelayResponse,
+  FollowUp,
+  PeerDelayResponseFollowUp,
+  Announce,
+  Signaling,
 }
 
 impl MessageType
 {
-  pub fn from_u8(byte: u8) -> Result<MessageType, String>
+  pub fn from_u8(byte: u8, two_step: bool) -> Result<MessageType, String>
   {
     return match byte
     {
-      0x0 => Ok(MessageType::Sync),
+      0x0 => if two_step { Ok(MessageType::Sync2Step) }
+      else { Ok(MessageType::Sync2Step) },
       0x2 => Ok(MessageType::PeerDelayRequest),
       0x3 => Ok(MessageType::PeerDelayResponse),
       0x8 => Ok(MessageType::FollowUp),
@@ -36,7 +38,8 @@ impl Debug for MessageType
   {
     return match *self
     {
-      MessageType::Sync => formatter.write_str("Sync"),
+      MessageType::Sync1Step => formatter.write_str("Sync1Step"),
+      MessageType::Sync2Step => formatter.write_str("Sync2Step"),
       MessageType::PeerDelayRequest => formatter.write_str("PeerDelayRequest"),
       MessageType::PeerDelayResponse => formatter.write_str("PeerDelayResponse"),
       MessageType::FollowUp => formatter.write_str("FollowUp"),
@@ -47,22 +50,22 @@ impl Debug for MessageType
   }
 }
 
-impl Display for MessageType
-{
-  fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
-  {
-    return formatter.write_str(format!(
-      "{:X}",
-      match self
-      {
-        MessageType::Sync => 0x0,
-        MessageType::PeerDelayRequest => 0x2,
-        MessageType::PeerDelayResponse => 0x3,
-        MessageType::FollowUp => 0x8,
-        MessageType::PeerDelayResponseFollowUp => 0xA,
-        MessageType::Announce => 0xB,
-        MessageType::Signaling => 0xC,
-    }
-    ).as_str());
-  }
-}
+// impl Display for MessageType
+// {
+//   fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+//   {
+//     return formatter.write_str(format!(
+//       "{:X}",
+//       match self
+//       {
+//         MessageType::Sync => 0x0,
+//         MessageType::PeerDelayRequest => 0x2,
+//         MessageType::PeerDelayResponse => 0x3,
+//         MessageType::FollowUp => 0x8,
+//         MessageType::PeerDelayResponseFollowUp => 0xA,
+//         MessageType::Announce => 0xB,
+//         MessageType::Signaling => 0xC,
+//     }
+//     ).as_str());
+//   }
+// }

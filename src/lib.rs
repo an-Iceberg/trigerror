@@ -6,11 +6,11 @@ pub mod config;
 pub mod constants;
 pub mod protocols;
 pub mod octet;
-pub mod time_result;
+pub mod utils;
 
 use chrono::{DateTime, Utc};
 use colored::Colorize;
-use crate::config::Config;
+use crate::{config::Config, protocols::gptp::message_type::MessageType};
 use libc::timeval;
 use pcap::{Active, Capture, Device, Packet};
 use pcap_file::pcap::PcapPacket;
@@ -88,43 +88,71 @@ pub fn get_timestamp() -> String
 pub fn bytes_to_u16(first_byte: u8, second_byte: u8) -> u16
 { return ((first_byte as u16) << 8) | second_byte as u16; }
 
-pub enum TimeResult
-{
-  TooEarly(Duration),
-  TooLate(Duration),
-  Ok
-}
+// #[derive(Debug, Default)]
+// pub enum TimeResult
+// {
+//   TooEarly(Duration),
+//   TooLate(Duration),
+//   #[default]
+//   Ok
+// }
 
-pub fn is_on_time(
-  last_message_timestamp: Duration,
-  current_message_timestamp: Duration,
-  message_interval: Duration,
-  margin: f64
-) -> TimeResult
-{
-  /*
-   last_message_timestamp                    current_message_timestamp
-     │                                                  │
-   ──┼──────────────────────────────────────────────────┼──────────────────> time
-     │                                                  │
-     ┊                                                  ┊
-     ┊         message_interval                         ┊
-     ├───────────────────────────────┤                  ┊
-     ┊                             margin               ┊
-     ┊                         ├───────────┤            ┊
-     ┊                                                  ┊
-  */
+// pub fn is_on_time(
+//   message_type: MessageType,
+//   last_message_timestamp: Duration,
+//   current_message_timestamp: Duration,
+//   message_interval: Duration,
+//   margin: f64
+// ) -> Result<(), String>
+// {
+//   /*
+//    last_message_timestamp                    current_message_timestamp
+//      │                                                  │
+//    ──┼──────────────────────────────────────────────────┼──────────────────> time
+//      │                                                  │
+//      ┊                                                  ┊
+//      ┊         message_interval                         ┊
+//      ├───────────────────────────────┤                  ┊
+//      ┊                             margin               ┊
+//      ┊                         ├───────────┤            ┊
+//      ┊                                                  ┊
+//   */
 
-  let lower_bound = last_message_timestamp + message_interval.mul_f64(1. - margin);
-  let upper_bound = last_message_timestamp + message_interval.mul_f64(1. + margin);
+//   let lower_bound = last_message_timestamp + message_interval.mul_f64(1. - margin);
+//   let upper_bound = last_message_timestamp + message_interval.mul_f64(1. + margin);
 
-  if current_message_timestamp < lower_bound
-  { return TimeResult::TooEarly(lower_bound.abs_diff(current_message_timestamp)); }
-  else if upper_bound < current_message_timestamp
-  { return TimeResult::TooLate(upper_bound.abs_diff(current_message_timestamp)); }
-  else
-  { return TimeResult::Ok; }
-}
+//   if current_message_timestamp < lower_bound
+//   {
+//     let diff = current_message_timestamp.abs_diff(lower_bound).as_micros() as f64 / 1_000.;
+
+//     return Err(format!(
+//       "{message_type:?} came in {:.3}ms too early. Lower bound: {}, actual: {}",
+//       diff,
+//       duration_to_string(lower_bound),
+//       duration_to_string(current_message_timestamp)
+//     ));
+//   }
+//   else if upper_bound < current_message_timestamp
+//   {
+//     let diff = upper_bound.abs_diff(current_message_timestamp).as_micros() as f64 / 1_000.;
+
+//     return Err(format!(
+//       "{message_type:?} came in {:.3}ms too late. Upper bound: {}, actual: {}",
+//       diff,
+//       duration_to_string(upper_bound),
+//       duration_to_string(current_message_timestamp)
+//     ));
+//   }
+
+//   return Ok(());
+
+//   // if current_message_timestamp < lower_bound
+//   // { return TimeResult::TooEarly(lower_bound.abs_diff(current_message_timestamp)); }
+//   // else if upper_bound < current_message_timestamp
+//   // { return TimeResult::TooLate(upper_bound.abs_diff(current_message_timestamp)); }
+//   // else
+//   // { return TimeResult::Ok; }
+// }
 
 pub fn create_capture_device(config: &Config) -> Capture<Active>
 {
