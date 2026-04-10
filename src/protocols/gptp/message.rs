@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::{Octet, bytes_to_u16, protocols::gptp::{message_type::MessageType}};
+use crate::{utils::{Octet, bytes_to_u16}, protocols::gptp::message_type::MessageType};
 use super::header::Header;
 
 // TODO: reverse byte order.
@@ -86,14 +86,29 @@ impl GPTPMesage
   {
     return match self
     {
-        GPTPMesage::Announce { header, .. } => header,
-        GPTPMesage::Signaling { header, .. } => header,
-        GPTPMesage::Sync1Step { header, .. } => header,
-        GPTPMesage::Sync2Step { header, .. } => header,
-        GPTPMesage::FollowUp { header } => header,
-        GPTPMesage::PeerDelayRequest { header } => header,
-        GPTPMesage::PeerDelayResponse { header, .. } => header,
-        GPTPMesage::PeerDelayResponseFollowUp { header, .. } => header,
+      GPTPMesage::Announce { header, .. } => header,
+      GPTPMesage::Signaling { header, .. } => header,
+      GPTPMesage::Sync1Step { header, .. } => header,
+      GPTPMesage::Sync2Step { header, .. } => header,
+      GPTPMesage::FollowUp { header } => header,
+      GPTPMesage::PeerDelayRequest { header } => header,
+      GPTPMesage::PeerDelayResponse { header, .. } => header,
+      GPTPMesage::PeerDelayResponseFollowUp { header, .. } => header,
+    };
+  }
+
+  pub fn get_type(&self) -> &MessageType
+  {
+    return match self
+    {
+      GPTPMesage::Announce { header, .. } => header.message_type(),
+      GPTPMesage::Signaling { header, .. } => header.message_type(),
+      GPTPMesage::Sync1Step { header, .. } => header.message_type(),
+      GPTPMesage::Sync2Step { header, .. } => header.message_type(),
+      GPTPMesage::FollowUp { header } => header.message_type(),
+      GPTPMesage::PeerDelayRequest { header } => header.message_type(),
+      GPTPMesage::PeerDelayResponse { header, .. } => header.message_type(),
+      GPTPMesage::PeerDelayResponseFollowUp { header, .. } => header.message_type(),
     };
   }
 

@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 use clap::Parser;
 
+use crate::utils::OutFormat;
+
 #[derive(Parser)]
 #[command(
   name = "trigerror",
@@ -10,8 +12,6 @@ use clap::Parser;
 )]
 pub struct CLI
 {
-  // TODO: add option to write default config file to cwd.
-
   /// The file which is used to configure trigerror. If this option is given then
   /// all other configurations thru the CLI will be ignored.
   #[arg(long, short = 'l')]
@@ -61,5 +61,9 @@ pub struct CLI
 
   /// Creates the config file in the current working directory with the default parameters.
   #[arg(long, short = 'c')]
-  pub create_default_config: bool
+  pub create_default_config: bool,
+
+  /// The file format, to which the error messages should be written.
+  #[arg(long)]
+  pub out_format: Option<OutFormat>,
 }

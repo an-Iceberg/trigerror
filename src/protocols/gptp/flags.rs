@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::get_bit;
+use crate::utils::get_bit;
 
 #[derive(Debug)]
 pub struct Flags

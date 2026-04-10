@@ -1,5 +1,5 @@
 use std::{fmt::Display, time::Duration};
-use crate::{Octet, bytes_to_u16, protocols::gptp::flags::Flags};
+use crate::{utils::{Octet, bytes_to_u16}, protocols::gptp::flags::Flags};
 use super::message_type::MessageType;
 
 /// Represents the header of a gPTP message as defined in the standard (802.1AS-2025) 11.4.2.

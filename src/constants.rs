@@ -11,9 +11,13 @@ pub const DEFAULT_MAX_RETRIGGERS: u32 = 10;
 pub const DEFAULT_FILE_SIZE: u32 = 10;
 
 pub const DEFAULT_FILE: &str =
-"# Quotes are not necessary.
+"# Quotes are not necessary.\n\
 out_dir = .\n\
+# Variants: txt, text, csv, json; case insensitive\n\
+out_format = txt\n\
+\n\
 interfaces = eth0, wlan0, lo\n\
+# BPF (this filters for PTP)\n\
 filter = ether proto 0x88f7\n\
 \n\
 # trigerror supports underscores for number group separators.

@@ -1,14 +1,12 @@
 use std::{fmt::Display, time::Duration};
-use crate::{duration_to_string, protocols::gptp::message_type::MessageType};
+
+use crate::{utils::duration_to_string, protocols::gptp::message_type::MessageType};
 
 #[derive(Debug, Default, Clone, Copy)]
 enum State
 {
-  WaitingForFollowUp,
-  WaitingForSync1Step,
-  WaitingForSync2Step,
   #[default]
-  Uninitialized,
+  WaitingForAnnounce,
 }
 
 impl Display for State
@@ -17,38 +15,24 @@ impl Display for State
   {
     return formatter.write_str(match self
     {
-      State::WaitingForFollowUp => "WaitingForFollowUp",
-      Self::WaitingForSync1Step => "WaitingFor1StepSync",
-      Self::WaitingForSync2Step => "WaitingFor2StepSync",
-      State::Uninitialized => "Uninitialized",
+      State::WaitingForAnnounce => "WaitingForAnnounce"
     });
   }
 }
 
-// Sync and follow up
-// TODO: wait for sync messages (messageType == Sync) and then for follow up (messageType == follow up)
-// NOTE: log_message_interval
-// NOTE: if log_message_interval changes, error and set value of erroneous packet to new now value
-// TODO: time margin 30%
-// Sync timeout, frame comes periodically, record when packet is missing (datafield last_sync_timer)
-// Figure 11-6
-// NOTE: if first is followup, just ignore.
-// NOTE: Uninit -> Sync received. all follow ups are ignored and state machine is not advanced.
-
-pub struct MDSyncReceiveStateMachine
+pub struct AnnounceStateMachine
 {
   state: State,
-
   message_interval: Duration,
   last_message_timestamp: Duration,
   margin: f64,
 }
 
-impl Default for MDSyncReceiveStateMachine
+impl Default for AnnounceStateMachine
 {
   fn default() -> Self
   {
-    return MDSyncReceiveStateMachine
+    return AnnounceStateMachine
     {
       state: State::default(),
       message_interval: Duration::default(),
@@ -58,61 +42,21 @@ impl Default for MDSyncReceiveStateMachine
   }
 }
 
-impl MDSyncReceiveStateMachine
+impl AnnounceStateMachine
 {
   pub fn new() -> Self { return Default::default(); }
 
   pub fn validate_state(&mut self, message_type: MessageType) -> Result<(), String>
   {
-    // NOTE: in Rust it is a generally discouraged to import enum variants by name b/c
-    // NOTE: name space pollution could happen easily which could lead to footguns. Here it is
-    // NOTE: used so that the state transitions are more easy to read.
-    use State::{Uninitialized, WaitingForSync1Step, WaitingForSync2Step, WaitingForFollowUp};
-    use MessageType::{Sync1Step, Sync2Step, FollowUp};
+    use State::{WaitingForAnnounce};
+    use MessageType::Announce;
 
-    /*
-    There are 2 lanes:
-    1StepSync -> 1StepSync -> 1StepSync -> …
-    or
-    2StepSync -> FollowUp -> 2StepSync -> FollowUp -> 2StepSync -> FollowUp -> …
-    Changing from one lane to the other is an error. But if such a thing happens then we do
-    update the state to that new lane.
-    TODO: ask about FollowUp -> 1StepSync
-    TODO: do we need to keep track of which lane we're in?
-    */
-
-    // This is ugly b/c the protocol has a weird structure. In the message type field there's no
-    // distinction between 1-Step Sync and 2-Step Sync.
     return match (self.state, message_type)
     {
       // Expected state changes.
-      (Uninitialized, FollowUp) => { Ok(()) } // We don't care about this case.
-      (Uninitialized, Sync1Step) => { self.state = WaitingForSync1Step; Ok(()) }
-      (Uninitialized, Sync2Step) => { self.state = WaitingForFollowUp; Ok(()) }
-      (WaitingForSync1Step, Sync1Step) => { Ok(()) }
-      (WaitingForSync2Step, Sync2Step) => { self.state = WaitingForFollowUp; Ok(()) }
-      (WaitingForFollowUp, FollowUp) => { self.state = WaitingForSync2Step; Ok(()) }
+      (WaitingForAnnounce, Announce) => { Ok(()) }
 
       // Unexpected state changes.
-      (WaitingForSync1Step, FollowUp) =>
-      {
-        self.state = WaitingForSync2Step;
-        Err("Waiting for Sync1Step but got FollowUp".to_string())
-      }
-      (WaitingForSync1Step, Sync2Step) =>
-      {
-        self.state = WaitingForFollowUp;
-        Err("Waiting for Sync1Step but got Sync2Step".to_string())
-      }
-      (WaitingForSync2Step, FollowUp) =>
-      {
-        Err("Waiting for Sync2Step but got FollowUp".to_string())
-      }
-      (WaitingForSync2Step, Sync1Step) =>
-      {
-        self.state = WaitingForSync1Step;
-        Err("Waiting for Sync2Step but got Sync1Step".to_string())
-      }
 
       // Catchall
       (state, message_type) => Err(format!(

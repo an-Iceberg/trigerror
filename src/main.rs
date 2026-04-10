@@ -2,7 +2,7 @@ use clap::Parser;
 use colored::Colorize;
 use pcap_file::pcap::{PcapPacket, PcapWriter};
 use std::{collections::VecDeque, fs::File, io::Write, path::{Path, PathBuf}, process::exit, time::Duration};
-use trigerror::{cli::CLI, config::Config, constants::DEFAULT_FILE, create_capture_device, get_timestamp, protocols::{Protocol, gptp::GPTP}, to_pcap, λ};
+use trigerror::{cli::CLI, config::Config, constants::DEFAULT_FILE, mac::MAC, protocols::{Protocol, gptp::GPTP}, utils::{create_capture_device, get_timestamp, to_pcap}, λ};
 
 fn main()
 {
@@ -34,10 +34,13 @@ fn main()
 
   // println!("{}", (Duration::from_micros(5) + Duration::from_micros(350).mul_f64(0.7)).as_micros());
 
+  // println!("{}", MAC::from_bytes((123,123,125,48,12,32)));
+
   // exit(32);
 
   let cli = CLI::parse();
 
+  // Writes default config file to current working directory.
   if cli.create_default_config
   {
     if Path::new("trigerror.ini").exists()
@@ -68,7 +71,7 @@ fn main()
 
   // CONFIGURE PHASE
 
-  println!("[ {} ] config phase", "INFO".cyan());
+  println!("[ {} ] configuring …", "INFO".cyan());
 
   // Check if config file location has been specified.
   if let Some(config_file_path) = cli.config_file_location
@@ -88,7 +91,7 @@ fn main()
     { interfaces = ifaces; }
   }
 
-  println!("[ {} ] done config phase", "INFO".cyan());
+  println!("[ {} ] done configuring", "INFO".cyan());
 
   // MONITORING PHASE
 
@@ -105,7 +108,7 @@ fn main()
     let mut protocol = GPTP::new();
     // let mut recording = Recording::new(config);
 
-    println!("[ {} ] monitoring phase", "INFO".cyan());
+    println!("[ {} ] monitoring …", "INFO".cyan());
 
     // TODO: this is formulated imperatively just so it works. Use better structures.
     loop
@@ -116,28 +119,16 @@ fn main()
       {
         Ok(_) =>
         {
-          let front_packet_time = packet.timestamp;
+          let current_packet_time = packet.timestamp;
 
           buffer.push_back(packet);
-
-          // println!(
-          //   "[before] δ time: {:>4}ms, buffer size: {:>4}",
-          //   front_packet_time.abs_diff(buffer.front().unwrap().timestamp).as_millis(),
-          //   buffer.len(),
-          // );
 
           // TODO: time is prio #1
           // NOTE: this is a constantly moving time window. It can happen, that the buffer barely has anything in it but it
           // NOTE: doesn't get filled up further b/c the next packet arrived so much later that all packets in the buffer expired.
           // Discard packets that are too old.
-          while front_packet_time.abs_diff(buffer.front().unwrap().timestamp).as_millis() > config.time_before as u128
+          while current_packet_time.abs_diff(buffer.front().unwrap().timestamp).as_millis() > config.time_before as u128
           { buffer.pop_front().unwrap(); }
-
-          // println!(
-          //   "[after]  δ time: {:>4}ms, buffer size: {:>4}",
-          //   front_packet_time.abs_diff(buffer.front().unwrap().timestamp).as_millis(),
-          //   buffer.len(),
-          // );
 
           // Discard packets that make the buffer too big.
           while buffer.len() as u32 > config.count_before
@@ -174,9 +165,12 @@ fn main()
           let mut error_time = packet.timestamp;
           let mut δ_time;
           let mut retrigger_counter = 1;
+          let mut error_id = 1;
 
           info_file.write_all(format!("packet No. {packet_number}: {error}\n").as_bytes())
             .expect("Error writing to errors file");
+
+          error_id += 1;
 
           // Write network traffic to capture and info file.
           loop

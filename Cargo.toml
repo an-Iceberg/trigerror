@@ -1,8 +1,8 @@
 [package]
 name = "trigerror"
-version = "0.1.0"
+version = "0.1.10"
 edition = "2024"
-license = "GPL-3"
+license = "GPL-3.0-only"
 readme = "README.md"
 repository = "https://github.com/an-Iceberg"
 keywords = ["packet", "packets", "networking", "error", "ptp", "gptp"]
