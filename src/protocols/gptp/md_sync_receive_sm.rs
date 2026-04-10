@@ -1,5 +1,5 @@
 use std::{fmt::Display, time::Duration};
-use crate::{duration_to_string, is_on_time, protocols::gptp::{message::GPTPMesage, message_type::MessageType}};
+use crate::{duration_to_string, protocols::gptp::message_type::MessageType};
 
 #[derive(Debug, Default, Clone, Copy)]
 enum State
