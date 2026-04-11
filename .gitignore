@@ -31,3 +31,5 @@ target
 *.errors.txt
 
 bin
+
+trigerror*.errors.*

@@ -4,10 +4,6 @@ Utility for recording network traffic upon encountering an error in a packet.
 
 - TODO: logo
 - TODO: calculate filesize from captured packets
-- TODO: (gPTP) sync, announce and Pdelay messages are important.
-- DONE: https://wiki.archlinux.org/title/Capabilities
-- DONE: `.pcap` vs. `.pcapng`
-- DONE: research: `.pcap`/`.pcapng` file format
 - DONE: for writing `.pcapng` files, 2 crates are of interest: `pcapng-writer` and `pcap-file`
 - NOTE: https://biot.com/capstats/bpf.html
 - NOTE: [intona ethernet tap source code](https://github.com/intona/ethernet-debugger#readme)
@@ -20,12 +16,6 @@ Utility for recording network traffic upon encountering an error in a packet.
 - TODO: in the BA paper link to dependencies directly
 - TODO: abstract auch noch mehrwert und was dabei rauskam (wichtigsten ergebnisse)
 - TODO: make use of [`PcapParser`](https://docs.rs/pcap-file/latest/pcap_file/pcap/struct.PcapParser.html)
-- TODO: announce SM: announce -> announce -> announce -> …
-- TODO: sync2step/followup and sync1step are mutually exclusive and should be noted as an error.
-  sync1 -> sync1 -> sync1 -> …
-  XOR
-  sync2 -> followup -> sync2 -> followup -> sync2 -> followup -> …
-  if erroneous switch happens, then we stay in the other «lane».
 
 ## Useful resources
 - [gPTP from ZHAW](https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page)

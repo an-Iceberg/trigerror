@@ -142,6 +142,21 @@ impl Config
       .and_then(|max_retriggers| max_retriggers.replace("_", "").parse::<u32>().ok())
     { self.max_retriggers = max_retriggers; }
 
+    if let Some(Some(out_format)) = default.get("out_format")
+    {
+      self.out_format = match out_format.to_lowercase().as_str()
+      {
+        "txt" | "text" => OutFormat::Text,
+        "csv" => OutFormat::CSV,
+        "json" => OutFormat::JSON,
+        other =>
+        {
+          eprintln!("[ {} ] unknown output format: {other}. Falling back to default.", "ERROR".red());
+          OutFormat::default()
+        }
+      }
+    }
+
     if !interfaces.is_empty() { return Some(interfaces); }
     else { return None; }
   }
@@ -182,6 +197,9 @@ impl Config
 
     if let Some(max_retriggers) = cli.max_retriggers
     { self.max_retriggers = max_retriggers; }
+
+    if let Some(out_format) = cli.out_format
+    { self.out_format = out_format; }
 
     if !interfaces.is_empty() { return Some(interfaces); }
     else { return None; }

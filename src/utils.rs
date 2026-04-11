@@ -31,10 +31,12 @@ macro_rules! λ
 
 pub fn duration_to_string(timestamp: Duration) -> String
 {
+  let seconds = timestamp.as_secs_f64();
   let datetime = DateTime::from_timestamp(
-    timestamp.as_secs() as i64,
-    timestamp.as_nanos() as u32
-  ).unwrap(); // FIX: handle this Option
+    seconds.trunc() as i64,
+    seconds.fract() as u32
+  ).unwrap();
+  // FIX: the subsecond part is not being printed.
   return datetime.format("%Y-%m-%d_%T%.f").to_string();
 }
 
@@ -87,52 +89,51 @@ pub fn write_header(file: &mut File, out_format: OutFormat)
   match out_format
   {
     OutFormat::CSV => file.write_all("error_id, packet_id, error\n".as_bytes()).unwrap(),
-    OutFormat::JSON => file.write_all("{\n}".as_bytes()).unwrap(),
+    OutFormat::JSON => file.write_all("[\n".as_bytes()).unwrap(),
     OutFormat::Text => (),
   }
 }
 
 pub fn write_error(
-  error_id: u32,
-  packet_id: u32,
-  errors: Vec<String>,
+  error_id: usize,
+  packet_id: usize,
+  errors: &Vec<String>,
   file: &mut File,
-  out_format: OutFormat
+  out_format: OutFormat,
 )
 {
-  // file.write_all(format!("error No. {error_id}, packet No. {packet_id}: {}").as_bytes()).unwrap()
   match out_format
   {
     OutFormat::Text => errors.iter().for_each(
       λ!{error =>
         file.write_all(
-          format!("error No. {error_id}, packet No. {packet_id}: {error}")
-            .as_bytes()
+          format!("error No. {error_id}, packet No. {packet_id}: {error}\n").as_bytes()
         ).unwrap()
       }
     ),
     OutFormat::CSV => errors.iter().for_each(
       λ!{error =>
         file.write_all(
-          format!("{error_id}, {packet_id}, \"{error}\"\n")
-            .as_bytes()
+          format!("{error_id}, {packet_id}, \"{error}\"\n").as_bytes()
         ).unwrap()
       }
     ),
     OutFormat::JSON =>
     {
-      // TODO: Delete the last line/character/byte? so that JSON format is still correct.
-
       for error in errors
       {
         file.write_all(format!(
-          "\"error_id\": {error_id},\n\"packet_id\": {packet_id},\n\"error\": {error}"
+          "  {{\n    \"error_id\": {error_id},\n    \"packet_id\": {packet_id},\n    \"error\": \"{error}\"\n  }},\n"
         ).as_bytes()).unwrap()
       }
-
-      file.write_all("}".as_bytes()).unwrap();
     }
   }
+}
+
+pub fn write_footer(file: &mut File, out_format: OutFormat)
+{
+  if matches!(out_format, OutFormat::JSON)
+  { file.write_all("]".as_bytes()).unwrap(); }
 }
 
 pub fn create_capture_device(config: &Config) -> Capture<Active>

@@ -19,8 +19,9 @@ impl MessageType
   {
     return match byte
     {
-      0x0 => if two_step { Ok(MessageType::Sync2Step) }
-      else { Ok(MessageType::Sync2Step) },
+      0x0 =>
+        if two_step { Ok(MessageType::Sync2Step) }
+        else { Ok(MessageType::Sync1Step) },
       0x2 => Ok(MessageType::PeerDelayRequest),
       0x3 => Ok(MessageType::PeerDelayResponse),
       0x8 => Ok(MessageType::FollowUp),

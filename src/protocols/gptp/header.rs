@@ -97,11 +97,3 @@ impl Header
   pub fn message_interval(&self) -> Duration
   { return Duration::from_secs_f64(2_f64.powi(self.log_message_interval as i32)); }
 }
-
-impl Display for Header
-{
-  fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
-  {
-    todo!()
-  }
-}

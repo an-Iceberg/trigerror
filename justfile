@@ -36,3 +36,7 @@ dev-home: build
 
 dev-home-2: build
   bin/trigerror_gptp_dbg --create-default-config
+
+install: build-release
+  sudo mv bin/trigerror_gptp /usr/bin
+  sudo setcap cap_net_raw+ep /usr/bin/trigerror_gptp

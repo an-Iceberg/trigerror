@@ -2,7 +2,7 @@ use clap::Parser;
 use colored::Colorize;
 use pcap_file::pcap::{PcapPacket, PcapWriter};
 use std::{collections::VecDeque, fs::File, io::Write, path::{Path, PathBuf}, process::exit, time::Duration};
-use trigerror::{cli::CLI, config::Config, constants::DEFAULT_FILE, mac::MAC, protocols::{Protocol, gptp::GPTP}, utils::{create_capture_device, get_timestamp, to_pcap}, λ};
+use trigerror::{cli::CLI, config::Config, constants::DEFAULT_FILE, mac::MAC, protocols::{Protocol, gptp::GPTP}, utils::{OutFormat, create_capture_device, get_timestamp, to_pcap, write_error, write_footer, write_header}, λ};
 
 fn main()
 {
@@ -134,7 +134,7 @@ fn main()
           while buffer.len() as u32 > config.count_before
           { buffer.pop_front().unwrap(); }
         }
-        Err(error) =>
+        Err(errors) =>
         {
           // WRITING PHASE
 
@@ -151,39 +151,50 @@ fn main()
 
           // Creating a file with information about the errors.
           let mut out_path = config.out_dir.clone();
-          out_path.push(format!("trigerror_{interface}_{timestamp}.errors.txt"));
+          out_path.push(format!(
+            "trigerror_{interface}_{timestamp}.errors.{}",
+            match config.out_format
+            {
+              OutFormat::Text => "txt",
+              OutFormat::CSV => "csv",
+              OutFormat::JSON => "json",
+            }
+          ));
           let mut info_file = File::create(out_path).expect("couldn't create errors file");
 
           // NOTE: This might be very slow.
           // Writing buffer to capture file.
           for packet in buffer.iter()
           { capture_writer.write_packet(packet).expect("Error writing to capture file"); }
+          // Writing the packet that triggered the error.
+          capture_writer.write_packet(&packet).unwrap();
 
           // Creating capture control variables.
-          let mut packet_number = buffer.len();
+          let mut packet_number = buffer.len() + 1;
           let mut packet_counter = 0;
           let mut error_time = packet.timestamp;
           let mut δ_time;
           let mut retrigger_counter = 1;
           let mut error_id = 1;
 
-          info_file.write_all(format!("packet No. {packet_number}: {error}\n").as_bytes())
-            .expect("Error writing to errors file");
+          write_header(&mut info_file, config.out_format);
 
+          write_error(error_id, packet_number, &errors, &mut info_file, config.out_format);
           error_id += 1;
 
           // Write network traffic to capture and info file.
           loop
           {
+            // FIX: This seems to skip an announce message.
             let packet = to_pcap(capture_device.next_packet().unwrap());
             packet_number += 1;
             capture_writer.write_packet(&packet).unwrap();
 
             // Another error happened! Record info about it.
-            if let Err(error) = protocol.validate_packet(&packet)
+            if let Err(errors) = protocol.validate_packet(&packet)
             {
-              info_file.write_all(format!("packet No. {packet_number}: {error}\n").as_bytes())
-                .expect("Error writing to errors file");
+              write_error(error_id, packet_number, &errors, &mut info_file, config.out_format);
+              error_id += 1;
 
               // Handle retrigger behavior.
               if config.retrigger && retrigger_counter < config.max_retriggers
@@ -215,7 +226,10 @@ fn main()
 
           buffer.clear();
 
-          exit(-1);
+          // Write the end of the errors file.
+          write_footer(&mut info_file, config.out_format);
+
+          exit(0);
         }
       }
     }

@@ -1,11 +1,6 @@
 use std::fmt::Debug;
-
 use crate::{utils::{Octet, bytes_to_u16}, protocols::gptp::message_type::MessageType};
 use super::header::Header;
-
-// TODO: reverse byte order.
-
-// TODO: debug print as hex numbers.
 
 // TODO: add reserved fields.
 

@@ -1,11 +1,12 @@
 use std::{fmt::Display, time::Duration};
 
-use crate::{utils::duration_to_string, protocols::gptp::message_type::MessageType};
+use crate::{mac::MAC, protocols::gptp::message_type::MessageType, utils::duration_to_string};
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 enum State
 {
   #[default]
+  Uninitialized,
   WaitingForAnnounce,
 }
 
@@ -15,13 +16,15 @@ impl Display for State
   {
     return formatter.write_str(match self
     {
-      State::WaitingForAnnounce => "WaitingForAnnounce"
+      State::Uninitialized => "Uninitialized",
+      State::WaitingForAnnounce => "WaitingForAnnounce",
     });
   }
 }
 
 pub struct AnnounceStateMachine
 {
+  source_mac: MAC,
   state: State,
   message_interval: Duration,
   last_message_timestamp: Duration,
@@ -34,6 +37,7 @@ impl Default for AnnounceStateMachine
   {
     return AnnounceStateMachine
     {
+      source_mac: MAC::default(),
       state: State::default(),
       message_interval: Duration::default(),
       last_message_timestamp: Duration::default(),
@@ -46,21 +50,24 @@ impl AnnounceStateMachine
 {
   pub fn new() -> Self { return Default::default(); }
 
+  pub fn is_uninitialized(&self) -> bool { return self.state == State::Uninitialized; }
+
   pub fn validate_state(&mut self, message_type: MessageType) -> Result<(), String>
   {
-    use State::{WaitingForAnnounce};
+    use State::{WaitingForAnnounce, Uninitialized};
     use MessageType::Announce;
 
     return match (self.state, message_type)
     {
       // Expected state changes.
+      (Uninitialized, Announce) => { Ok(()) }
       (WaitingForAnnounce, Announce) => { Ok(()) }
 
       // Unexpected state changes.
 
       // Catchall
       (state, message_type) => Err(format!(
-        "Unknown state and message combination: state: {state}, message type: {message_type:?}"
+        "Unknown state and message combination from AnnounceSM: state: {state}, message type: {message_type:?}"
       ))
     };
   }
@@ -98,22 +105,29 @@ impl AnnounceStateMachine
     {
       let diff = current_message_timestamp.abs_diff(lower_bound).as_micros() as f64 / 1_000.;
 
-      return Err(format!(
-        "{message_type:?} came in {:.3}ms too early. Lower bound: {}, actual: {}",
-        diff,
-        duration_to_string(lower_bound),
-        duration_to_string(current_message_timestamp)
-      ));
+      return Err(format!("{message_type:?} came in {diff:.3}ms too early."));
     }
     else if upper_bound < current_message_timestamp
     {
       let diff = upper_bound.abs_diff(current_message_timestamp).as_micros() as f64 / 1_000.;
 
+      return Err(format!("{message_type:?} came in {diff:.3}ms too late."));
+    }
+
+    return Ok(());
+  }
+
+  pub fn validate_mac(&mut self, new_source_mac: MAC) -> Result<(), String>
+  {
+    if new_source_mac != self.source_mac
+    {
+      let old_source_mac = self.source_mac;
+      self.source_mac = new_source_mac;
+
       return Err(format!(
-        "{message_type:?} came in {:.3}ms too late. Upper bound: {}, actual: {}",
-        diff,
-        duration_to_string(upper_bound),
-        duration_to_string(current_message_timestamp)
+        "source MAC address has changed. Was: {}, now is: {}",
+        old_source_mac,
+        new_source_mac,
       ));
     }
 
