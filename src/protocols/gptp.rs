@@ -88,7 +88,7 @@ impl Protocol for GPTP
     {
       Sync1Step | Sync2Step | FollowUp =>
       {
-        // We deliberately ignore the first errors b/c the state machine is still uninitialized and would throw errors.
+        // We deliberately ignore the first errors b/c the state machine is still uninitialized and would throw false positive errors.
         if self.sync_sm.is_uninitialized()
         {
           let _ = self.sync_sm.validate_state(*message.get_type());
@@ -106,7 +106,7 @@ impl Protocol for GPTP
 
       Announce =>
       {
-        // We deliberately ignore the first errors b/c the state machine is still uninitialized and would throw errors.
+        // We deliberately ignore the first errors b/c the state machine is still uninitialized and would throw false positive errors.
         if self.announce_sm.is_uninitialized()
         {
           let _ = self.announce_sm.validate_state(*message.get_type());

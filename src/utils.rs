@@ -95,27 +95,34 @@ pub fn write_header(file: &mut File, out_format: OutFormat)
 }
 
 pub fn write_error(
-  error_id: usize,
+  error_id: &mut usize,
   packet_id: usize,
   errors: &Vec<String>,
   file: &mut File,
   out_format: OutFormat,
 )
 {
+  // TODO: this is chaotic. Restructure it to be more easily understandable.
   match out_format
   {
     OutFormat::Text => errors.iter().for_each(
       λ!{error =>
-        file.write_all(
-          format!("error No. {error_id}, packet No. {packet_id}: {error}\n").as_bytes()
-        ).unwrap()
+        {
+          file.write_all(
+            format!("error No. {error_id}, packet No. {packet_id}: {error}\n").as_bytes()
+          ).unwrap();
+          *error_id+=1;
+        }
       }
     ),
     OutFormat::CSV => errors.iter().for_each(
       λ!{error =>
-        file.write_all(
-          format!("{error_id}, {packet_id}, \"{error}\"\n").as_bytes()
-        ).unwrap()
+        {
+          file.write_all(
+            format!("{error_id}, {packet_id}, \"{error}\"\n").as_bytes()
+          ).unwrap();
+          *error_id+=1;
+        }
       }
     ),
     OutFormat::JSON =>
@@ -124,7 +131,8 @@ pub fn write_error(
       {
         file.write_all(format!(
           "  {{\n    \"error_id\": {error_id},\n    \"packet_id\": {packet_id},\n    \"error\": \"{error}\"\n  }},\n"
-        ).as_bytes()).unwrap()
+        ).as_bytes()).unwrap();
+        *error_id+=1;
       }
     }
   }

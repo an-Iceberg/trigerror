@@ -96,6 +96,9 @@ impl AnnounceStateMachine
     let lower_bound = self.last_message_timestamp + self.message_interval.mul_f64(1. - self.margin);
     let upper_bound = self.last_message_timestamp + self.message_interval.mul_f64(1. + self.margin);
 
+    // let lower_bound = self.last_message_timestamp + self.message_interval + self.message_interval.mul_f64(1. - self.margin);
+    // let upper_bound = self.last_message_timestamp + self.message_interval + self.message_interval.mul_f64(1. + self.margin);
+
     // Update state.
     self.last_message_timestamp = current_message_timestamp;
     self.message_interval = new_message_interval;
