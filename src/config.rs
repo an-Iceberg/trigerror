@@ -33,7 +33,7 @@ pub struct Config
   /// How large in MB the size should be.
   pub file_size: u32,
   /// If true and if errors happens after our initial error then the counter and timer get reset.
-  pub retrigger: bool,
+  pub retrigger: bool, // TODO: this should be an Option<u32>.
   /// The maximum amount of errors that should be recorded.
   pub max_retriggers: u32,
   /// The file format where the errors are documented.
