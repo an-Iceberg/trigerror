@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::utils::get_bit;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Flags
 {
   alternate_master: bool,

@@ -1,6 +1,6 @@
 use std::{fmt::Display, time::Duration};
 
-use crate::{mac::MAC, protocols::gptp::{message_type::MessageType, state_machines::{mac_validator::MACValidator, time_validator::TimeValidator}}};
+use crate::{mac::MAC, protocols::gptp::{message::GPTPMessage, message_type::MessageType, message_types::{announce::Announce, follow_up::FollowUp, sync1step::Sync1Step, sync2step::Sync2Step}, state_machines::{mac_validator::MACValidator, time_validator::TimeValidator}}};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 enum State
@@ -41,28 +41,36 @@ impl SyncSM
 {
   pub fn validate(
     &mut self,
-    message_type: MessageType,
+    message: GPTPMessage,
     current_message_timestamp: Duration,
-    new_message_interval: Duration,
     new_source_mac: MAC,
   ) -> Result<(), Vec<String>>
   {
     if self.state == State::Uninitialized
     {
-      let _ = self.validate_state(message_type);
-      let _ = self.validate_timing(current_message_timestamp, new_message_interval);
+      let _ = self.validate_state(message.header().message_type());
+      let _ = self.validate_timing(current_message_timestamp, message.header().message_interval());
       let _ = self.validate_mac(new_source_mac);
       return Ok(());
     }
 
     let mut errors = vec![];
 
-    if let Err(error) = self.validate_state(message_type)
+    if let Err(error) = self.validate_state(message.header().message_type())
     { errors.push(error); }
-    if let Err(error) = self.validate_timing(current_message_timestamp, new_message_interval)
+    if let Err(error) = self.validate_timing(current_message_timestamp, message.header().message_interval())
     { errors.push(error); }
     if let Err(error) = self.validate_mac(new_source_mac)
     { errors.push(error); }
+
+    // NOTE: this demonstrates how we'd handle the different message types.
+    match message
+    {
+      GPTPMessage::FollowUp(follow_up) => (),
+      GPTPMessage::Sync1Step(sync_1_step) => (),
+      GPTPMessage::Sync2Step(sync_2_step) => (),
+      _ => unreachable!()
+    }
 
     if errors.is_empty() { return Ok(()); }
     else { return Err(errors); }

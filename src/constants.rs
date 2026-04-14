@@ -31,3 +31,4 @@ max_retriggers = 10\n\
 ";
 
 pub const MARGIN: f64 = 0.3;
+pub const PTP_ETHER_TYPE: u16 = 0x88f7;

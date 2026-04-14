@@ -112,6 +112,7 @@ impl Config
     if let Some(Some(filter)) = default.get("filter")
     { self.filter = filter.to_owned(); }
 
+    // TODO: this needs to also create the directories if they don't exist.
     if let Some(Some(out_dir)) = default.get("out_dir")
     { self.out_dir = PathBuf::from_str(out_dir.as_str()).unwrap(); }
 

@@ -19,6 +19,7 @@ Utility for recording network traffic upon encountering an error in a packet.
 - TODO: make use of [`PcapParser`](https://docs.rs/pcap-file/latest/pcap_file/pcap/struct.PcapParser.html)
 
 ## Useful resources
+- [an alternative way to handle `enum`s using generics](https://stackoverflow.com/questions/72438594/how-can-i-use-enum-variants-as-generic-type#answer-72438660)
 - [Rust parallelism](https://www.youtube.com/watch?v=AiSl4vf40WU)
 - [gPTP from ZHAW](https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page)
 - [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
