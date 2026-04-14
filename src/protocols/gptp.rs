@@ -4,16 +4,18 @@ pub mod header;
 pub mod message;
 pub mod sync_state_machine;
 pub mod announce_state_machine;
+pub mod state_machines;
 
 use pcap_file::pcap::PcapPacket;
-use crate::{mac::MAC, protocols::{Protocol, gptp::{announce_state_machine::AnnounceStateMachine, message::GPTPMesage, message_type::MessageType, sync_state_machine::SyncStateMachine}}, utils::{bytes_to_u16, get_bit}};
+use crate::{mac::MAC, protocols::{Protocol, gptp::{announce_state_machine::AnnounceStateMachine, message::GPTPMesage, message_type::MessageType, state_machines::{announce::AnnounceSM, peer_delay::PeerDelaySM, signaling::SignalingSM, sync::SyncSM}, sync_state_machine::SyncStateMachine}}, utils::{bytes_to_u16, get_bit}};
 
 #[derive(Default)]
 pub struct GPTP
 {
-  counter: u32,
-  sync_sm: SyncStateMachine,
-  announce_sm: AnnounceStateMachine,
+  sync_sm: SyncSM,
+  announce_sm: AnnounceSM,
+  peer_delay_sm: PeerDelaySM,
+  signaling_sm: SignalingSM,
 }
 
 impl GPTP
@@ -22,9 +24,10 @@ impl GPTP
   {
     return GPTP
     {
-      counter: 0,
-      sync_sm: SyncStateMachine::new(),
-      announce_sm: AnnounceStateMachine::new(),
+      sync_sm: SyncSM::default(),
+      announce_sm: AnnounceSM::default(),
+      peer_delay_sm: PeerDelaySM::default(),
+      signaling_sm: SignalingSM::default(),
     };
   }
 }
@@ -40,10 +43,6 @@ impl Protocol for GPTP
     // Not PTP; we don't care.
     if bytes_to_u16(packet.data[12], packet.data[13]) != 0x88f7
     { return Ok(()); }
-
-    self.counter += 1;
-
-    let mut errors: Vec<String> = vec![];
 
     let ether_source = (
       packet.data[0],
@@ -80,52 +79,26 @@ impl Protocol for GPTP
     };
 
     // TODO: domain nr. (probably with a HashMap (use hashbrown as needed)).
-    // TODO: ethernet source address
 
     use MessageType::{Sync1Step, Sync2Step, FollowUp, Announce};
 
-    match *message.get_type()
+    return match message.get_type()
     {
       Sync1Step | Sync2Step | FollowUp =>
-      {
-        // We deliberately ignore the first errors b/c the state machine is still uninitialized and would throw false positive errors.
-        if self.sync_sm.is_uninitialized()
-        {
-          let _ = self.sync_sm.validate_state(*message.get_type());
-          let _ = self.sync_sm.validate_timing(packet.timestamp, message.header().message_interval(), *message.get_type());
-          let _ = self.sync_sm.validate_mac(MAC::from_bytes(ether_source));
-        }
-
-        if let Err(error) = self.sync_sm.validate_state(*message.get_type())
-        { errors.push(error); }
-        if let Err(error) = self.sync_sm.validate_timing(packet.timestamp, message.header().message_interval(), *message.get_type())
-        { errors.push(error); }
-        if let Err(error) = self.sync_sm.validate_mac(MAC::from_bytes(ether_source))
-        { errors.push(error); }
-      }
-
+        self.sync_sm.validate(
+          message.get_type(),
+          packet.timestamp,
+          message.header().message_interval(),
+          MAC::from_bytes(ether_source)
+        ),
       Announce =>
-      {
-        // We deliberately ignore the first errors b/c the state machine is still uninitialized and would throw false positive errors.
-        if self.announce_sm.is_uninitialized()
-        {
-          let _ = self.announce_sm.validate_state(*message.get_type());
-          let _ = self.announce_sm.validate_timing(packet.timestamp, message.header().message_interval(), *message.get_type());
-          let _ = self.announce_sm.validate_mac(MAC::from_bytes(ether_source));
-        }
-
-        if let Err(error) = self.announce_sm.validate_state(*message.get_type())
-        { errors.push(error); }
-        if let Err(error) = self.announce_sm.validate_timing(packet.timestamp, message.header().message_interval(), *message.get_type())
-        { errors.push(error); }
-        if let Err(error) = self.announce_sm.validate_mac(MAC::from_bytes(ether_source))
-        { errors.push(error); }
-      }
-
-      _ => ()
-    }
-
-    if errors.is_empty() { return Ok(()); }
-    else { return Err(errors); }
+        self.announce_sm.validate(
+          message.get_type(),
+          packet.timestamp,
+          message.header().message_interval(),
+          MAC::from_bytes(ether_source)
+        ),
+      _ => Ok(())
+    };
   }
 }

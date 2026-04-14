@@ -92,7 +92,7 @@ impl GPTPMesage
     };
   }
 
-  pub fn get_type(&self) -> &MessageType
+  pub fn get_type(&self) -> MessageType
   {
     return match self
     {

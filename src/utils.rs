@@ -102,38 +102,25 @@ pub fn write_error(
   out_format: OutFormat,
 )
 {
-  // TODO: this is chaotic. Restructure it to be more easily understandable.
+  // TODO: this increments the error ID too often.
   match out_format
   {
-    OutFormat::Text => errors.iter().for_each(
-      λ!{error =>
-        {
-          file.write_all(
-            format!("error No. {error_id}, packet No. {packet_id}: {error}\n").as_bytes()
-          ).unwrap();
-          *error_id+=1;
-        }
-      }
-    ),
-    OutFormat::CSV => errors.iter().for_each(
-      λ!{error =>
-        {
-          file.write_all(
-            format!("{error_id}, {packet_id}, \"{error}\"\n").as_bytes()
-          ).unwrap();
-          *error_id+=1;
-        }
-      }
-    ),
-    OutFormat::JSON =>
+    OutFormat::Text => for error in errors
     {
-      for error in errors
-      {
-        file.write_all(format!(
-          "  {{\n    \"error_id\": {error_id},\n    \"packet_id\": {packet_id},\n    \"error\": \"{error}\"\n  }},\n"
-        ).as_bytes()).unwrap();
-        *error_id+=1;
-      }
+      file.write_all(format!("error No. {error_id}, packet No. {packet_id}: {error}\n").as_bytes()).unwrap();
+      *error_id+=1;
+    }
+    OutFormat::CSV => for error in errors
+    {
+      file.write_all(format!("{error_id}, {packet_id}, \"{error}\"\n").as_bytes()).unwrap();
+      *error_id+=1;
+    }
+    OutFormat::JSON => for error in errors
+    {
+      file.write_all(format!(
+        "  {{\n    \"error_id\": {error_id},\n    \"packet_id\": {packet_id},\n    \"error\": \"{error}\"\n  }},\n"
+      ).as_bytes()).unwrap();
+      *error_id+=1;
     }
   }
 }

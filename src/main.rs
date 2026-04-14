@@ -180,7 +180,7 @@ fn main()
           write_header(&mut info_file, config.out_format);
 
           write_error(&mut error_id, packet_number, &errors, &mut info_file, config.out_format);
-          error_id += 1;
+          // error_id += 1;
 
           // Write network traffic to capture and info file.
           loop
@@ -194,7 +194,7 @@ fn main()
             if let Err(errors) = protocol.validate_packet(&packet)
             {
               write_error(&mut error_id, packet_number, &errors, &mut info_file, config.out_format);
-              error_id += 1;
+              // error_id += 1;
 
               // Handle retrigger behavior.
               if config.retrigger && retrigger_counter < config.max_retriggers

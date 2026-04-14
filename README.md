@@ -2,6 +2,7 @@
 
 Utility for recording network traffic upon encountering an error in a packet.
 
+- TODO: maybe it would be a good idea to create a `struct PacketState` where all possible errors are set as one big bitfield?
 - TODO: logo
 - TODO: calculate filesize from captured packets
 - DONE: for writing `.pcapng` files, 2 crates are of interest: `pcapng-writer` and `pcap-file`
@@ -18,6 +19,7 @@ Utility for recording network traffic upon encountering an error in a packet.
 - TODO: make use of [`PcapParser`](https://docs.rs/pcap-file/latest/pcap_file/pcap/struct.PcapParser.html)
 
 ## Useful resources
+- [Rust parallelism](https://www.youtube.com/watch?v=AiSl4vf40WU)
 - [gPTP from ZHAW](https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page)
 - [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
 - [Rust crate implementing PTP](https://crates.io/crates/statime)

@@ -126,12 +126,20 @@ impl SyncStateMachine
        ├───────────────────────────────┤                  ┊
        ┊                             margin               ┊
        ┊                         ├───────────┤            ┊
-       ┊                                                  ┊
+       ┊                  lower_bound    upper_bound      ┊
     */
 
     // Calculate relevant values.
-    let lower_bound = self.last_message_timestamp + self.message_interval + self.message_interval.mul_f64(1. - self.margin);
-    let upper_bound = self.last_message_timestamp + self.message_interval + self.message_interval.mul_f64(1. + self.margin);
+    // This adds 70% of the message interval.
+    let lower_bound = self.last_message_timestamp + self.message_interval.mul_f64(1. - self.margin);
+    // This adds 130% of the message interval.
+    let upper_bound = self.last_message_timestamp + self.message_interval.mul_f64(1. + self.margin);
+
+    // NOTE: Aurel's suggestion but it produces the same results.
+    // let should_time = self.last_message_timestamp + self.message_interval;
+    // let margin = self.message_interval.mul_f64(self.margin);
+    // let lower_bound = should_time - margin;
+    // let upper_bound = should_time + margin;
 
     // Update state.
     self.last_message_timestamp = current_message_timestamp;

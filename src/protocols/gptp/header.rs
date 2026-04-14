@@ -73,7 +73,7 @@ impl Header
     };
   }
 
-  pub fn message_type(&self) -> &MessageType { return &self.message_type; }
+  pub fn message_type(&self) -> MessageType { return self.message_type; }
   pub fn major_sd_old(&self) -> Octet { return self.major_s_do_id; }
   pub fn version_ptp(&self) -> Octet { return self.version_ptp; }
   pub fn minor_version_ptp(&self) -> Octet { return self.minor_version_ptp; }

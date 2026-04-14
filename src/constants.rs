@@ -29,3 +29,5 @@ time_after = 5_000\n\
 retrigger = false\n\
 max_retriggers = 10\n\
 ";
+
+pub const MARGIN: f64 = 0.3;

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 use crate::{cli::CLI, constants::{
   DEFAULT_COUNT_AFTER,
   DEFAULT_COUNT_BEFORE,
@@ -111,6 +111,9 @@ impl Config
 
     if let Some(Some(filter)) = default.get("filter")
     { self.filter = filter.to_owned(); }
+
+    if let Some(Some(out_dir)) = default.get("out_dir")
+    { self.out_dir = PathBuf::from_str(out_dir.as_str()).unwrap(); }
 
     if let Some(count_before) = default.get("count_before")
       .and_then(|count_before| count_before.as_ref())
