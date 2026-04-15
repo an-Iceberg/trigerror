@@ -86,7 +86,7 @@ impl AnnounceSM
     new_message_interval: Duration
   ) -> Result<(), String>
   {
-    return self.time_validator.validate(current_message_timestamp, new_message_interval);
+    return self.time_validator.validate(current_message_timestamp, new_message_interval, MessageType::Announce);
   }
 
   fn validate_mac(&mut self, new_source_mac: MAC) -> Result<(), String>

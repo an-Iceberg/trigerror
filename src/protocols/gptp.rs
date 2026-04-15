@@ -82,11 +82,11 @@ impl Protocol for GPTP
       Ok(()),
 
       GPTPMessage::FollowUp(follow_up) =>
-      self.sync_sm.validate(GPTPMessage::FollowUp(follow_up), packet.timestamp, ether_source),
+      self.sync_sm.validate_follow_up(follow_up, ether_source),
       GPTPMessage::Sync1Step(sync_1_step) =>
-      self.sync_sm.validate(GPTPMessage::Sync1Step(sync_1_step), packet.timestamp, ether_source),
+      self.sync_sm.validate_sync_1_step(sync_1_step, packet.timestamp, ether_source),
       GPTPMessage::Sync2Step(sync_2_step) =>
-      self.sync_sm.validate(GPTPMessage::Sync2Step(sync_2_step), packet.timestamp, ether_source),
+      self.sync_sm.validate_sync_2_step(sync_2_step, packet.timestamp, ether_source),
     };
   }
 }

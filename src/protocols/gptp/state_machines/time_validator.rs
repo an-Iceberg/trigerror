@@ -14,7 +14,7 @@ impl TimeValidator
     &mut self,
     current_message_timestamp: Duration,
     new_message_interval: Duration,
-    // message_type: MessageType,
+    message_type: MessageType,
   ) -> Result<(), String>
   {
     /*
@@ -47,12 +47,12 @@ impl TimeValidator
     if current_message_timestamp < lower_bound
     {
       let diff = current_message_timestamp.abs_diff(lower_bound).as_micros() as f64 / 1_000.;
-      return Err(format!("Message came in {diff:.3}ms too early."));
+      return Err(format!("{message_type:?} came in {diff:.3}ms too early."));
     }
     else if upper_bound < current_message_timestamp
     {
       let diff = upper_bound.abs_diff(current_message_timestamp).as_micros() as f64 / 1_000.;
-      return Err(format!("Message came in {diff:.3}ms too late."));
+      return Err(format!("{message_type:?} came in {diff:.3}ms too late."));
     }
     return Ok(());
   }
