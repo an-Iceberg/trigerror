@@ -16,7 +16,7 @@ Make sure that [Rust](https://rust-lang.org/) is installed on your system. If no
 > curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 > ```
 
-## Install just
+## Install `just`
 
 > ### Note
 > [`just`](https://just.systems/) is not strictly required. It is provided for convenience.
@@ -39,8 +39,6 @@ cargo install just
 ```
 
 # Compile from Source
-
-## Build Receipts
 
 To build `trigerror` in debug mode, run
 ```bash
