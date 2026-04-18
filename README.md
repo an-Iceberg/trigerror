@@ -1,6 +1,86 @@
 # `trigerror`
 
-Utility for recording network traffic upon encountering an error in a packet.
+A small utility app with a CLI for monitoring network traffic and creating recordings with error logs upon detecting
+a protocol error in a packet.
+
+# Prerequisites
+
+## Install Rust
+
+Make sure that [Rust](https://rust-lang.org/) is installed on your system. If not then go to
+[`rustup`](https://rustup.rs/) and follow the installation instructions.
+
+> It is most likely going to be this command but double check on the website to be sure:
+>
+> ```bash
+> curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+> ```
+
+## Install just
+
+> ### Note
+> [`just`](https://just.systems/) is not strictly required. It is provided for convenience.
+> If you don't want to install it it is sufficient to run
+> ```bash
+> cargo build
+> ```
+> or
+> ```bash
+> cargo build --release
+> ```
+> respectively. The compiled binaries can be found in `target/debug` or `target/release` respectively.
+
+This project provides a [`justfile`](https://just.systems/) for convenience.
+It runs a series of commands in order so that you don't have to type it all out every time.
+If you have installed Rust on your system you can install it simply with:
+
+```bash
+cargo install just
+```
+
+# Compile from Source
+
+## Build Receipts
+
+To build `trigerror` in debug mode, run
+```bash
+just build-dev
+```
+
+To build `trigerror` in release mode, run
+```bash
+just build
+```
+
+Both of these commands will place the final binary in `bin` for convenience.
+The name of the binary will be appended with the protocol name and version. (This might change in the future)
+The original binary is located in `target/debug` or `target/release` respectively.
+(The `target` directory only appears once `cargo` starts compiling.)
+
+You can also install the `trigerror` executable to `/usr/bin` by running:
+```bash
+just install
+```
+
+## Clean up Build Artifacts
+After `cargo` is done compiling it is advisable to remove the build artifacts for the `target` folder can become
+several GB in size. For that simply run:
+
+⚠️ This will also remove the binaries from the `bin` folder.
+```bash
+just clean
+```
+
+If you want to keep the contents of the `bin` folder simply run:
+```bash
+cargo clean
+```
+
+---
+
+---
+
+---
 
 - TODO: maybe it would be a good idea to create a `struct PacketState` where all possible errors are set as one big bitfield?
 - TODO: logo
