@@ -30,7 +30,7 @@ Make sure that [Rust](https://rust-lang.org/) is installed on your system. If no
 > ```
 > respectively. The compiled binaries can be found in `target/debug` or `target/release` respectively.
 
-This project provides a [`justfile`](https://just.systems/) for convenience.
+This project provides a [`justfile`](https://just.systems/man/en/quick-start.html) for convenience.
 It runs a series of commands in order so that you don't have to type it all out every time.
 If you have installed Rust on your system you can install it simply with:
 
