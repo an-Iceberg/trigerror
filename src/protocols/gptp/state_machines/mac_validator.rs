@@ -21,4 +21,6 @@ impl MACValidator
     else
     { return Err(format!("MAC address changed. Old: {last_mac}, new: {new_mac}").to_string()); }
   }
+
+  pub fn mac(&self) -> MAC { return self.last_mac; }
 }

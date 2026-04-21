@@ -94,6 +94,8 @@ cargo clean
 
 ---
 
+# Consider creating a generic `enum` with an `Uninitialized` variant and use it where it makes sense. Or just use an `Option`.
+
 - TODO: maybe it would be a good idea to create a `struct PacketState` where all possible errors are set as one big bitfield?
 - TODO: logo
 - TODO: calculate filesize from captured packets

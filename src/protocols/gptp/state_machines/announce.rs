@@ -39,7 +39,7 @@ impl AnnounceSM
     new_source_mac: MAC,
   ) -> Result<(), Vec<String>>
   {
-    if self.state == State::Uninitialized
+    if matches!(self.state, State::Uninitialized)
     {
       let _ = self.validate_state(announce.header().message_type());
       let _ = self.validate_timing(current_message_timestamp, announce.header().message_interval());
@@ -68,7 +68,7 @@ impl AnnounceSM
     return match (self.state, message_type)
     {
       // Expected state changes.
-      (Uninitialized, Announce) => { Ok(()) }
+      (Uninitialized, Announce) => { self.state = WaitingForAnnounce; Ok(()) }
       (WaitingForAnnounce, Announce) => { Ok(()) }
 
       // Unexpected state changes.

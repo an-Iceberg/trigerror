@@ -35,6 +35,7 @@ pub struct PeerDelaySM
   time_validator: TimeValidator,
 }
 
+// TODO: initialize the state machine without causing errors.
 impl PeerDelaySM
 {
   pub fn validate_peer_delay_request(
@@ -44,6 +45,19 @@ impl PeerDelaySM
     new_source_mac: MAC,
   ) -> Result<(), Vec<String>>
   {
+    // Initializing the state machine. (We just ignore the first errors)
+    if matches!(self.state, State::Uninitialized)
+    {
+      let _ = self.validate_state(peer_delay_request.header().message_type());
+      let _ = self.validate_timing(
+        current_message_timestamp,
+        peer_delay_request.header().message_interval(),
+        peer_delay_request.header().message_type()
+      );
+      let _ = self.validate_request_mac(new_source_mac);
+      return Ok(());
+    }
+
     let mut errors = vec![];
 
     if let Err(error) = self.validate_state(peer_delay_request.header().message_type())
@@ -78,7 +92,11 @@ impl PeerDelaySM
       MessageType::PeerDelayResponse
     )
     { errors.push(error); }
-    if let Err(error) = self.validate_response_mac(new_source_mac)
+    // A really ugly way to correctly initialize the response MAC of the state machine.
+    // If response MAC is uninitialized, ignore generated error. Else return it.
+    if self.response_mac_validator.mac() == MAC::from_bytes((00, 00, 00, 00, 00, 00))
+    { let _ = self.validate_response_mac(new_source_mac); }
+    else if let Err(error) = self.validate_response_mac(new_source_mac)
     { errors.push(error); }
 
     if errors.is_empty() { return Ok(()); }
@@ -117,6 +135,8 @@ impl PeerDelaySM
     return match (self.state, message_type)
     {
       // TODO: how do we exit the uninitialized state?
+      // Init
+      (Uninitialized, PeerDelayRequest) => { self.state = WaitingForPeerDelayResponse; Ok(()) }
 
       // Expected state changes.
       (WaitingForPeerDelayRequest, PeerDelayRequest) => { self.state = WaitingForPeerDelayResponse; Ok(()) }

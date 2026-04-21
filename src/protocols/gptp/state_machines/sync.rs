@@ -72,7 +72,7 @@ impl SyncSM
     new_source_mac: MAC,
   ) -> Result<(), Vec<String>>
   {
-    if self.state == State::Uninitialized
+    if matches!(self.state, State::Uninitialized)
     { return Ok(()); }
 
     let mut errors = vec![];
@@ -93,7 +93,7 @@ impl SyncSM
     new_source_mac: MAC,
   ) -> Result<(), Vec<String>>
   {
-    if self.state == State::Uninitialized
+    if matches!(self.state, State::Uninitialized)
     {
       let _ = self.validate_state(sync_1_step.header().message_type());
       let _ = self.validate_timing(current_message_timestamp, sync_1_step.header().message_interval(), MessageType::Sync1Step);
@@ -121,7 +121,7 @@ impl SyncSM
     new_source_mac: MAC,
   ) -> Result<(), Vec<String>>
   {
-    if self.state == State::Uninitialized
+    if matches!(self.state, State::Uninitialized)
     {
       let _ = self.validate_state(sync_2_step.header().message_type());
       let _ = self.validate_timing(current_message_timestamp, sync_2_step.header().message_interval(), MessageType::Sync2Step);
