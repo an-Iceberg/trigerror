@@ -13,6 +13,9 @@ impl PeerDelayResponseFollowUp
   pub fn header(&self) -> Header
   { return self.header; }
 
+  pub fn msg_type(&self) -> MessageType
+  { return self.header().message_type(); }
+
   pub fn new(payload: &[u8]) -> Self
   {
     return Self

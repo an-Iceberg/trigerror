@@ -3,7 +3,7 @@ use crate::{utils::{Octet, bytes_to_u16}, protocols::gptp::flags::Flags};
 use super::message_type::MessageType;
 
 /// Represents the header of a gPTP message as defined in the standard (802.1AS-2025) 11.4.2.
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Header
 {
   major_s_do_id: Octet,
@@ -91,9 +91,19 @@ impl Header
   /// > The current value of the logarithm of base 2 of the mean time interval \[…].
   pub fn log_message_interval(&self) -> i8 { return self.log_message_interval; }
 
+  // ERROR: cannot convert float seconds to Duration: value is either too big or NaN
+  // ERROR: logMessageInterval is 127 -> 1.7e38s, waaay too big
+  // NOTE: the values 126, 127 and 128 seem to have special meaning.
+  // NOTE: this must mean that we parse the value incorrectly. This also never happened until now.
   /// Returns the expected time interval until the next message as a `std::time::Duration`.
   ///
   /// This performs 2^`self.log_message_interval`.
   pub fn message_interval(&self) -> Duration
-  { return Duration::from_secs_f64(2_f64.powi(self.log_message_interval as i32)); }
+  {
+    // dbg!{self.message_type.to_string()};
+    // dbg!{self.log_message_interval};
+    // dbg!{2_f64.powi(self.log_message_interval as i32)};
+    // println!();
+    return Duration::from_secs_f64(2_f64.powi(self.log_message_interval as i32));
+  }
 }

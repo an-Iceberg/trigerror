@@ -30,8 +30,8 @@ impl Display for State
 pub struct PeerDelaySM
 {
   state: State,
-  request_mac_validator: MACValidator,
-  response_mac_validator: MACValidator,
+  requester_mac_validator: MACValidator,
+  responder_mac_validator: MACValidator,
   time_validator: TimeValidator,
 }
 
@@ -48,27 +48,27 @@ impl PeerDelaySM
     // Initializing the state machine. (We just ignore the first errors)
     if matches!(self.state, State::Uninitialized)
     {
-      let _ = self.validate_state(peer_delay_request.header().message_type());
+      let _ = self.validate_state(MessageType::PeerDelayRequest);
       let _ = self.validate_timing(
         current_message_timestamp,
         peer_delay_request.header().message_interval(),
-        peer_delay_request.header().message_type()
+        MessageType::PeerDelayRequest,
       );
-      let _ = self.validate_request_mac(new_source_mac);
+      let _ = self.validate_request_mac(new_source_mac, MessageType::PeerDelayRequest);
       return Ok(());
     }
 
     let mut errors = vec![];
 
-    if let Err(error) = self.validate_state(peer_delay_request.header().message_type())
+    if let Err(error) = self.validate_state(MessageType::PeerDelayRequest)
     { errors.push(error); }
     if let Err(error) = self.validate_timing(
       current_message_timestamp,
       peer_delay_request.header().message_interval(),
-      MessageType::PeerDelayRequest
+      MessageType::PeerDelayRequest,
     )
     { errors.push(error); }
-    if let Err(error) = self.validate_request_mac(new_source_mac)
+    if let Err(error) = self.validate_request_mac(new_source_mac, MessageType::PeerDelayRequest)
     { errors.push(error); }
 
     if errors.is_empty() { return Ok(()); }
@@ -84,19 +84,19 @@ impl PeerDelaySM
   {
     let mut errors = vec![];
 
-    if let Err(error) = self.validate_state(peer_delay_response.header().message_type())
+    if let Err(error) = self.validate_state(MessageType::PeerDelayResponse)
     { errors.push(error); }
     if let Err(error) = self.validate_timing(
       current_message_timestamp,
       peer_delay_response.header().message_interval(),
-      MessageType::PeerDelayResponse
+      MessageType::PeerDelayResponse,
     )
     { errors.push(error); }
     // A really ugly way to correctly initialize the response MAC of the state machine.
     // If response MAC is uninitialized, ignore generated error. Else return it.
-    if self.response_mac_validator.mac() == MAC::from_bytes((00, 00, 00, 00, 00, 00))
-    { let _ = self.validate_response_mac(new_source_mac); }
-    else if let Err(error) = self.validate_response_mac(new_source_mac)
+    if self.responder_mac_validator.mac() == MAC::from_bytes((00, 00, 00, 00, 00, 00))
+    { let _ = self.validate_response_mac(new_source_mac, MessageType::PeerDelayResponse); }
+    else if let Err(error) = self.validate_response_mac(new_source_mac, MessageType::PeerDelayResponse)
     { errors.push(error); }
 
     if errors.is_empty() { return Ok(()); }
@@ -112,15 +112,15 @@ impl PeerDelaySM
   {
     let mut errors = vec![];
 
-    if let Err(error) = self.validate_state(peer_delay_response_follow_up.header().message_type())
+    if let Err(error) = self.validate_state(MessageType::PeerDelayResponseFollowUp)
     { errors.push(error); }
     if let Err(error) = self.validate_timing(
       current_message_timestamp,
       peer_delay_response_follow_up.header().message_interval(),
-      MessageType::PeerDelayResponseFollowUp
+      MessageType::PeerDelayResponseFollowUp,
     )
     { errors.push(error); }
-    if let Err(error) = self.validate_response_mac(new_source_mac)
+    if let Err(error) = self.validate_response_mac(new_source_mac, MessageType::PeerDelayResponseFollowUp)
     { errors.push(error); }
 
     if errors.is_empty() { return Ok(()); }
@@ -144,11 +144,32 @@ impl PeerDelaySM
       (WaitingForPeerDelayResponseFollowUp, PeerDelayResponseFollowUp) => { self.state = WaitingForPeerDelayRequest; Ok(()) }
 
       // Unexpected state changes.
-      // TODO
+      (WaitingForPeerDelayRequest, PeerDelayResponse) =>
+      {
+        self.state = WaitingForPeerDelayResponseFollowUp;
+        Err("Waiting for PeerDelayRequest but got PeerDelayResponse".to_string())
+      }
+      (WaitingForPeerDelayRequest, PeerDelayResponseFollowUp) =>
+        Err("Waiting for PeerDelayRequest but got PeerDelayResponseFollowUp".to_string()),
+
+      (WaitingForPeerDelayResponse, PeerDelayResponseFollowUp) =>
+      {
+        self.state = WaitingForPeerDelayRequest;
+        Err("Waiting for PeerDelayResponse but got PeerDelayResponseFollowUp".to_string())
+      }
+      (WaitingForPeerDelayResponse, PeerDelayRequest) =>
+        Err("Waiting for PeerDelayResponse but got PeerDelayRequest".to_string()),
+      (WaitingForPeerDelayResponseFollowUp, PeerDelayRequest) =>
+      {
+        self.state = WaitingForPeerDelayResponse;
+        Err("Waiting for PeerDelayResponseFollowUp but got PeerDelayRequest".to_string())
+      }
+      (WaitingForPeerDelayResponseFollowUp, PeerDelayResponse) =>
+        Err("Waiting for PeerDelayResponseFollowUp but got PeerDelayResponse".to_string()),
 
       // Catchall
       (state, message_type) => Err(format!(
-        "Unknown state and message combination from SyncSM: state: {state}, message type: {message_type:?}"
+        "Unknown state and message combination from PeerDelaySM: state: {state}, message type: {message_type}"
       ))
     };
   }
@@ -163,13 +184,13 @@ impl PeerDelaySM
     return self.time_validator.validate(current_message_timestamp, new_message_interval, message_type);
   }
 
-  fn validate_request_mac(&mut self, new_source_mac: MAC) -> Result<(), String>
+  fn validate_request_mac(&mut self, new_source_mac: MAC, message_type: MessageType) -> Result<(), String>
   {
-    return self.request_mac_validator.validate(new_source_mac);
+    return self.requester_mac_validator.validate(new_source_mac, message_type);
   }
 
-  fn validate_response_mac(&mut self, new_source_mac: MAC) -> Result<(), String>
+  fn validate_response_mac(&mut self, new_source_mac: MAC, message_type: MessageType) -> Result<(), String>
   {
-    return self.response_mac_validator.validate(new_source_mac);
+    return self.responder_mac_validator.validate(new_source_mac, message_type);
   }
 }

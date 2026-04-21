@@ -102,7 +102,6 @@ pub fn write_error(
   out_format: OutFormat,
 )
 {
-  // TODO: this increments the error ID too often.
   match out_format
   {
     OutFormat::Text => for error in errors

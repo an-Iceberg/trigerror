@@ -5,11 +5,23 @@ pub mod message_type;
 pub mod message_types;
 pub mod state_machines;
 
+use std::collections::HashMap;
 use pcap_file::pcap::PcapPacket;
 use crate::{constants::PTP_ETHER_TYPE, mac::MAC, protocols::{Protocol, gptp::{message::{GPTPMessage}, message_type::MessageType, state_machines::{announce::AnnounceSM, peer_delay::PeerDelaySM, signaling::SignalingSM, sync::SyncSM}}}, utils::{bytes_to_u16, get_bit}};
 
 #[derive(Default)]
 pub struct GPTP
+{
+  sync_sm: SyncSM,
+  announce_sm: AnnounceSM,
+  peer_delay_sm: PeerDelaySM,
+  signaling_sm: SignalingSM,
+
+  domains: HashMap<u8, Domain>,
+}
+
+#[derive(Default)]
+struct Domain
 {
   sync_sm: SyncSM,
   announce_sm: AnnounceSM,
@@ -27,6 +39,7 @@ impl GPTP
       announce_sm: AnnounceSM::default(),
       peer_delay_sm: PeerDelaySM::default(),
       signaling_sm: SignalingSM::default(),
+      domains: HashMap::with_capacity(127),
     };
   }
 }
@@ -42,12 +55,12 @@ impl Protocol for GPTP
     { return Ok(()); }
 
     let ether_source = MAC::from_bytes((
-      packet.data[0],
-      packet.data[1],
-      packet.data[2],
-      packet.data[3],
-      packet.data[4],
-      packet.data[5],
+      packet.data[6],
+      packet.data[7],
+      packet.data[8],
+      packet.data[9],
+      packet.data[10],
+      packet.data[11],
     ));
 
     let payload = &packet.data[14..];
@@ -69,7 +82,7 @@ impl Protocol for GPTP
       GPTPMessage::Announce(announce) =>
         self.announce_sm.validate(announce, packet.timestamp, ether_source),
       GPTPMessage::Signaling(signaling) =>
-        Ok(()),
+        self.signaling_sm.validate(signaling, packet.timestamp, ether_source),
       GPTPMessage::PeerDelayRequest(peer_delay_request) =>
         self.peer_delay_sm.validate_peer_delay_request(peer_delay_request, packet.timestamp, ether_source),
       GPTPMessage::PeerDelayResponse(peer_delay_response) =>

@@ -1,4 +1,5 @@
 build-dev:
+  # rm -f bin/trigerror_gptp_dev
   mkdir -p bin
   cargo build --color always --message-format human
   cp target/debug/trigerror bin
@@ -6,9 +7,10 @@ build-dev:
   sudo setcap cap_net_raw+ep bin/trigerror_gptp_dev
 
 run-dev: build-dev
-  bin/trigerror_gptp_dbg
+  bin/trigerror_gptp_dev
 
 build:
+  # rm -f bin/trigerror_gptp
   mkdir -p bin
   cargo build --release --color always --message-format human
   cp target/release/trigerror bin

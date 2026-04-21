@@ -1,5 +1,5 @@
 use std::{fmt::Display, time::Duration};
-use crate::{mac::MAC, protocols::gptp::{message::GPTPMessage, message_type::MessageType, message_types::{announce::Announce, follow_up::FollowUp, sync1step::Sync1Step, sync2step::Sync2Step}, state_machines::{mac_validator::MACValidator, time_validator::TimeValidator}}};
+use crate::{mac::MAC, protocols::gptp::{message_type::MessageType, message_types::{follow_up::FollowUp, sync1step::Sync1Step, sync2step::Sync2Step}, state_machines::{mac_validator::MACValidator, time_validator::TimeValidator}}};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 enum State
@@ -38,34 +38,6 @@ pub struct SyncSM
 
 impl SyncSM
 {
-  // pub fn validate(
-  //   &mut self,
-  //   message: GPTPMessage,
-  //   current_message_timestamp: Duration,
-  //   new_source_mac: MAC,
-  // ) -> Result<(), Vec<String>>
-  // {
-  //   if self.state == State::Uninitialized
-  //   {
-  //     let _ = self.validate_state(message.header().message_type());
-  //     let _ = self.validate_timing(current_message_timestamp, message.header().message_interval());
-  //     let _ = self.validate_mac(new_source_mac);
-  //     return Ok(());
-  //   }
-
-  //   let mut errors = vec![];
-
-  //   if let Err(error) = self.validate_state(message.header().message_type())
-  //   { errors.push(error); }
-  //   if let Err(error) = self.validate_timing(current_message_timestamp, message.header().message_interval())
-  //   { errors.push(error); }
-  //   if let Err(error) = self.validate_mac(new_source_mac)
-  //   { errors.push(error); }
-
-  //   if errors.is_empty() { return Ok(()); }
-  //   else { return Err(errors); }
-  // }
-
   pub fn validate_follow_up(
     &mut self,
     follow_up: FollowUp,
@@ -77,9 +49,9 @@ impl SyncSM
 
     let mut errors = vec![];
 
-    if let Err(error) = self.validate_state(follow_up.header().message_type())
+    if let Err(error) = self.validate_state(MessageType::FollowUp)
     { errors.push(error); }
-    if let Err(error) = self.validate_mac(new_source_mac)
+    if let Err(error) = self.validate_mac(new_source_mac, MessageType::FollowUp)
     { errors.push(error); }
 
     if errors.is_empty() { return Ok(()); }
@@ -95,19 +67,27 @@ impl SyncSM
   {
     if matches!(self.state, State::Uninitialized)
     {
-      let _ = self.validate_state(sync_1_step.header().message_type());
-      let _ = self.validate_timing(current_message_timestamp, sync_1_step.header().message_interval(), MessageType::Sync1Step);
-      let _ = self.validate_mac(new_source_mac);
+      let _ = self.validate_state(MessageType::Sync1Step);
+      let _ = self.validate_timing(
+        current_message_timestamp,
+        sync_1_step.header().message_interval(),
+        MessageType::Sync1Step,
+      );
+      let _ = self.validate_mac(new_source_mac, MessageType::Sync1Step);
       return Ok(());
     }
 
     let mut errors = vec![];
 
-    if let Err(error) = self.validate_state(sync_1_step.header().message_type())
+    if let Err(error) = self.validate_state(MessageType::Sync1Step)
     { errors.push(error); }
-    if let Err(error) = self.validate_timing(current_message_timestamp, sync_1_step.header().message_interval(), MessageType::Sync1Step)
+    if let Err(error) = self.validate_timing(
+      current_message_timestamp,
+      sync_1_step.header().message_interval(),
+      MessageType::Sync1Step,
+    )
     { errors.push(error); }
-    if let Err(error) = self.validate_mac(new_source_mac)
+    if let Err(error) = self.validate_mac(new_source_mac, MessageType::Sync1Step)
     { errors.push(error); }
 
     if errors.is_empty() { return Ok(()); }
@@ -123,19 +103,27 @@ impl SyncSM
   {
     if matches!(self.state, State::Uninitialized)
     {
-      let _ = self.validate_state(sync_2_step.header().message_type());
-      let _ = self.validate_timing(current_message_timestamp, sync_2_step.header().message_interval(), MessageType::Sync2Step);
-      let _ = self.validate_mac(new_source_mac);
+      let _ = self.validate_state(MessageType::Sync2Step);
+      let _ = self.validate_timing(
+        current_message_timestamp,
+        sync_2_step.header().message_interval(),
+        MessageType::Sync2Step,
+      );
+      let _ = self.validate_mac(new_source_mac, MessageType::Sync2Step);
       return Ok(());
     }
 
     let mut errors = vec![];
 
-    if let Err(error) = self.validate_state(sync_2_step.header().message_type())
+    if let Err(error) = self.validate_state(MessageType::Sync2Step)
     { errors.push(error); }
-    if let Err(error) = self.validate_timing(current_message_timestamp, sync_2_step.header().message_interval(), MessageType::Sync2Step)
+    if let Err(error) = self.validate_timing(
+      current_message_timestamp,
+      sync_2_step.header().message_interval(),
+      MessageType::Sync2Step,
+    )
     { errors.push(error); }
-    if let Err(error) = self.validate_mac(new_source_mac)
+    if let Err(error) = self.validate_mac(new_source_mac, MessageType::Sync2Step)
     { errors.push(error); }
 
     if errors.is_empty() { return Ok(()); }
@@ -172,14 +160,14 @@ impl SyncSM
         Err("Waiting for Sync1Step but got Sync2Step".to_string())
       }
       (WaitingForSync2Step, FollowUp) =>
-        { Err("Waiting for Sync2Step but got FollowUp".to_string()) }
+        Err("Waiting for Sync2Step but got FollowUp".to_string()),
       (WaitingForSync2Step, Sync1Step) =>
       {
         self.state = WaitingForSync1Step;
         Err("Waiting for Sync2Step but got Sync1Step".to_string())
       }
       (WaitingForFollowUp, Sync2Step) =>
-        { Err("Waiting for FollowUp but got Sync2Step".to_string()) }
+        Err("Waiting for FollowUp but got Sync2Step".to_string()),
       (WaitingForFollowUp, Sync1Step) =>
       {
         self.state = WaitingForSync1Step;
@@ -188,7 +176,7 @@ impl SyncSM
 
       // Catchall
       (state, message_type) => Err(format!(
-        "Unknown state and message combination from SyncSM: state: {state}, message type: {message_type:?}"
+        "Unknown state and message combination from SyncSM: state: {state}, message type: {message_type}"
       ))
     };
   }
@@ -203,8 +191,8 @@ impl SyncSM
     return self.time_validator.validate(current_message_timestamp, new_message_interval, message_type);
   }
 
-  fn validate_mac(&mut self, new_source_mac: MAC) -> Result<(), String>
+  fn validate_mac(&mut self, new_source_mac: MAC, message_type: MessageType) -> Result<(), String>
   {
-    return self.mac_validator.validate(new_source_mac);
+    return self.mac_validator.validate(new_source_mac, message_type);
   }
 }

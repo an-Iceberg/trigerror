@@ -13,7 +13,7 @@ use clap::Parser;
 use colored::Colorize;
 use pcap_file::pcap::{PcapPacket, PcapWriter};
 use std::{collections::VecDeque, fs::File, io::Write, path::{Path, PathBuf}, process::exit, time::Duration};
-use crate::{cli::CLI, config::Config, constants::DEFAULT_FILE, mac::MAC, protocols::{Protocol, gptp::GPTP}, utils::{OutFormat, create_capture_device, get_timestamp, to_pcap, write_error, write_footer, write_header}};
+use crate::{cli::CLI, config::Config, constants::DEFAULT_FILE, mac::MAC, protocols::{Protocol, gptp::{GPTP, message_type::MessageType}}, utils::{OutFormat, create_capture_device, get_timestamp, to_pcap, write_error, write_footer, write_header}};
 
 fn main()
 {
@@ -46,6 +46,12 @@ fn main()
   // println!("{}", (Duration::from_micros(5) + Duration::from_micros(350).mul_f64(0.7)).as_micros());
 
   // println!("{}", MAC::from_bytes((123,123,125,48,12,32)));
+
+  // println!("{message_type}", message_type = MessageType::Sync1Step);
+  // println!("{message_type}", message_type = MessageType::Sync2Step);
+  // println!("{message_type}", message_type = MessageType::Announce);
+  // println!("{message_type}", message_type = MessageType::FollowUp);
+  // println!("{message_type}", message_type = MessageType::Signaling);
 
   // exit(32);
 

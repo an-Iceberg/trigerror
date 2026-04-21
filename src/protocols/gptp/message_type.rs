@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Display};
+use std::fmt::Display;
 
 #[derive(Clone, Copy)]
 pub enum MessageType
@@ -33,40 +33,20 @@ impl MessageType
   }
 }
 
-impl Debug for MessageType
+impl Display for MessageType
 {
   fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
   {
-    return match *self
+    return formatter.write_str(match self
     {
-      MessageType::Sync1Step => formatter.write_str("Sync1Step"),
-      MessageType::Sync2Step => formatter.write_str("Sync2Step"),
-      MessageType::PeerDelayRequest => formatter.write_str("PeerDelayRequest"),
-      MessageType::PeerDelayResponse => formatter.write_str("PeerDelayResponse"),
-      MessageType::FollowUp => formatter.write_str("FollowUp"),
-      MessageType::PeerDelayResponseFollowUp => formatter.write_str("PeerDelayResponseFollowUp"),
-      MessageType::Announce => formatter.write_str("Announce"),
-      MessageType::Signaling => formatter.write_str("Signaling"),
-    };
+      MessageType::Sync1Step => "Sync1Step",
+      MessageType::Sync2Step => "Sync2Step",
+      MessageType::PeerDelayRequest => "PeerDelayRequest",
+      MessageType::PeerDelayResponse => "PeerDelayResponse",
+      MessageType::FollowUp => "FollowUp",
+      MessageType::PeerDelayResponseFollowUp => "PeerDelayResponseFollowUp",
+      MessageType::Announce => "Announce",
+      MessageType::Signaling => "Signaling",
+    });
   }
 }
-
-// impl Display for MessageType
-// {
-//   fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
-//   {
-//     return formatter.write_str(format!(
-//       "{:X}",
-//       match self
-//       {
-//         MessageType::Sync => 0x0,
-//         MessageType::PeerDelayRequest => 0x2,
-//         MessageType::PeerDelayResponse => 0x3,
-//         MessageType::FollowUp => 0x8,
-//         MessageType::PeerDelayResponseFollowUp => 0xA,
-//         MessageType::Announce => 0xB,
-//         MessageType::Signaling => 0xC,
-//     }
-//     ).as_str());
-//   }
-// }
