@@ -76,11 +76,13 @@ cargo clean
 ```
 
 # Roadmap
-- Async timer to detect missing packets (packet never arrives). This requires a time driven approach instead
-  of an event driven approach.
-- domains for each gPTP message. should be a simple hashmap: domain_id -> (state machines)
-- implement verification for the remaining packets so that gPTP is implemented more or less completely
-- capture on multiple interfaces. one thread for each interface
+1. Async timer to detect missing packets (packet never arrives) and to finish writing to file.
+  This requires a time driven approach instead of an event driven approach. Timer sends signal every second.
+  (observer pattern) (Qt signals and slots)
+1. intona ethernet tap
+1. domains for each gPTP message. should be a simple hashmap: domain_id -> (state machines)
+1. implement verification for the remaining packets so that gPTP is implemented more or less completely
+1. capture on multiple interfaces. one thread for each interface
   - an error on one interface triggers a recording on all interfaces
 ## More Distant Goals
 - small dashboard in the console with size of buffer, amount of errors recorded, etc.

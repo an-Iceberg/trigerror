@@ -7,3 +7,6 @@ pub struct PeerDelaySM
   mac_validator: MACValidator,
   time_validator: TimeValidator,
 }
+
+// TODO: unique per source MAC
+// TODO:

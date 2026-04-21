@@ -229,7 +229,7 @@ fn main()
           // Write the end of the errors file.
           write_footer(&mut info_file, config.out_format);
 
-          exit(0);
+          // exit(0);
         }
       }
     }

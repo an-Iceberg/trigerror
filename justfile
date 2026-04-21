@@ -2,8 +2,8 @@ build-dev:
   mkdir -p bin
   cargo build --color always --message-format human
   cp target/debug/trigerror bin
-  mv bin/trigerror bin/trigerror_gptp_dbg
-  sudo setcap cap_net_raw+ep bin/trigerror_gptp_dbg
+  mv bin/trigerror bin/trigerror_gptp_dev
+  sudo setcap cap_net_raw+ep bin/trigerror_gptp_dev
 
 run-dev: build-dev
   bin/trigerror_gptp_dbg
@@ -26,16 +26,16 @@ clean:
   rm -r bin/*
 
 dev: build-dev
-  bin/trigerror_gptp_dbg --help
+  bin/trigerror_gptp_dev --help
 
 dev-school: build-dev
-  bin/trigerror_gptp_dbg --interfaces "wlan0"
+  bin/trigerror_gptp_dev --interfaces "wlan0"
 
 dev-home: build-dev
-  bin/trigerror_gptp_dbg --interfaces "enp0s13f0u3u2i5"
+  bin/trigerror_gptp_dev --interfaces "enp0s13f0u3u2i5"
 
 dev-home-2: build-dev
-  bin/trigerror_gptp_dbg --create-default-config
+  bin/trigerror_gptp_dev --create-default-config
 
 install: build
   sudo mv bin/trigerror_gptp /usr/bin
