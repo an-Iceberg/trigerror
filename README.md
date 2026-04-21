@@ -28,7 +28,8 @@ Make sure that [Rust](https://rust-lang.org/) is installed on your system. If no
 > ```bash
 > cargo build --release
 > ```
-> respectively. The compiled binaries can be found in `target/debug` or `target/release` respectively.
+> respectively. The compiled binaries can be found in `target/debug/trigerror` or `target/release/trigerror`
+> respectively.
 
 This project provides a [`justfile`](https://just.systems/man/en/quick-start.html) for convenience.
 It runs a series of commands in order so that you don't have to type it all out every time.
@@ -73,6 +74,17 @@ If you want to keep the contents of the `bin` folder simply run:
 ```bash
 cargo clean
 ```
+
+# Roadmap
+- Async timer to detect missing packets (packet never arrives). This requires a time driven approach instead
+  of an event driven approach.
+- domains for each gPTP message. should be a simple hashmap: domain_id -> (state machines)
+- implement verification for the remaining packets so that gPTP is implemented more or less completely
+- capture on multiple interfaces. one thread for each interface
+  - an error on one interface triggers a recording on all interfaces
+## More Distant Goals
+- small dashboard in the console with size of buffer, amount of errors recorded, etc.
+- more protocols. select which protocol(s) should trigger a recording
 
 ---
 
