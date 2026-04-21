@@ -1,7 +1,4 @@
 use std::{fmt::Display, time::Duration};
-
-use pcap::Stat;
-
 use crate::{mac::MAC, protocols::gptp::{message::GPTPMessage, message_type::MessageType, message_types::{announce::Announce, follow_up::FollowUp, sync1step::Sync1Step, sync2step::Sync2Step}, state_machines::{mac_validator::MACValidator, time_validator::TimeValidator}}};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

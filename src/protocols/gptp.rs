@@ -35,8 +35,6 @@ impl Protocol for GPTP
 {
   fn validate_packet(&mut self, packet: &PcapPacket) -> Result<(), Vec<String>>
   {
-    // TODO: collect all errors in Vec<String> and return that. (breaking API change)
-
     // PTP = 0x88f7
 
     // Not PTP; we don't care.
@@ -69,24 +67,21 @@ impl Protocol for GPTP
     return match message
     {
       GPTPMessage::Announce(announce) =>
-      self.announce_sm.validate(announce, packet.timestamp, ether_source),
-
+        self.announce_sm.validate(announce, packet.timestamp, ether_source),
       GPTPMessage::Signaling(signaling) =>
-      Ok(()),
-
+        Ok(()),
       GPTPMessage::PeerDelayRequest(peer_delay_request) =>
-      Ok(()),
+        self.peer_delay_sm.validate_peer_delay_request(peer_delay_request, packet.timestamp, ether_source),
       GPTPMessage::PeerDelayResponse(peer_delay_response) =>
-      Ok(()),
+        self.peer_delay_sm.validate_peer_delay_response(peer_delay_response, packet.timestamp, ether_source),
       GPTPMessage::PeerDelayResponseFollowUp(peer_delay_response_follow_up) =>
-      Ok(()),
-
+        self.peer_delay_sm.validate_peer_delay_response_follow_up(peer_delay_response_follow_up, packet.timestamp, ether_source),
       GPTPMessage::FollowUp(follow_up) =>
-      self.sync_sm.validate_follow_up(follow_up, ether_source),
+        self.sync_sm.validate_follow_up(follow_up, ether_source),
       GPTPMessage::Sync1Step(sync_1_step) =>
-      self.sync_sm.validate_sync_1_step(sync_1_step, packet.timestamp, ether_source),
+        self.sync_sm.validate_sync_1_step(sync_1_step, packet.timestamp, ether_source),
       GPTPMessage::Sync2Step(sync_2_step) =>
-      self.sync_sm.validate_sync_2_step(sync_2_step, packet.timestamp, ether_source),
+        self.sync_sm.validate_sync_2_step(sync_2_step, packet.timestamp, ether_source),
     };
   }
 }

@@ -1,8 +1,19 @@
+#![allow(clippy::needless_return)]
+#![allow(mixed_script_confusables)]
+
+pub mod cli;
+pub mod config;
+pub mod constants;
+pub mod protocols;
+pub mod utils;
+pub mod mac;
+pub mod writer;
+
 use clap::Parser;
 use colored::Colorize;
 use pcap_file::pcap::{PcapPacket, PcapWriter};
 use std::{collections::VecDeque, fs::File, io::Write, path::{Path, PathBuf}, process::exit, time::Duration};
-use trigerror::{cli::CLI, config::Config, constants::DEFAULT_FILE, mac::MAC, protocols::{Protocol, gptp::GPTP}, utils::{OutFormat, create_capture_device, get_timestamp, to_pcap, write_error, write_footer, write_header}, λ};
+use crate::{cli::CLI, config::Config, constants::DEFAULT_FILE, mac::MAC, protocols::{Protocol, gptp::GPTP}, utils::{OutFormat, create_capture_device, get_timestamp, to_pcap, write_error, write_footer, write_header}};
 
 fn main()
 {

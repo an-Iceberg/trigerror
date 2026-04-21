@@ -114,9 +114,7 @@ cargo clean
 - [Rust `async`](https://doc.rust-lang.org/book/ch17-00-async-await.html)
 - [an alternative way to handle `enum`s using generics](https://stackoverflow.com/questions/72438594/how-can-i-use-enum-variants-as-generic-type#answer-72438660)
 - [Rust parallelism](https://www.youtube.com/watch?v=AiSl4vf40WU)
-- [gPTP from ZHAW](https://www.zhaw.ch/en/engineering/institutes-centres/ines/communication-network-engineering/high-precision-time-synchronization-with-ptp-and-gptp-new-page)
 - [PTP](https://en.wikipedia.org/wiki/Precision_Time_Protocol)
-- [Rust crate implementing PTP](https://crates.io/crates/statime)
 - [config directory in OS](https://docs.rs/dirs/latest/dirs/fn.config_dir.html)
 - [Rust `pcap` crate](https://docs.rs/rpcap/latest/rpcap/)
 - [Rust `cli` help](https://rust-cli.github.io/book/index.html)
@@ -134,6 +132,7 @@ cargo clean
   - https://github.com/mdeloof/statig
   - https://crates.io/search?q=finite%20state%20machine
 - [state machine pattern for Rust](https://refactoring.guru/design-patterns/state/rust/example)
+- [intona ethernet tap](https://intona.eu/en/products/ethernet-debugger)
 
 ## References
-- [`timeval` `struct` fields meaning](https://man7.org/linux/man-pages/man3/timeval.3type.html)
+- [`struct timeval` fields meaning](https://man7.org/linux/man-pages/man3/timeval.3type.html)
