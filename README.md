@@ -96,6 +96,17 @@ cargo clean
 
 # Consider creating a generic `enum` with an `Uninitialized` variant and use it where it makes sense. Or just use an `Option`.
 
+- TODO: create tests. for that create `PcapPackets` and a `GPTP` validator, one by one feed the `PcapPacket`s to the `GPTP`
+  validator and verify that the correct error messages are returned.
+- TODO: Intona Ether Tap is a tap device. Consider using [tappers](https://crates.io/crates/tappers)
+- TODO: document: abstract -> concrete (not too far into details) -> abstract
+- TODO: define scope better (10 GB/s links are out of scope)
+- TODO: `logMessageInterval` only for:
+  - synce1step
+  - sync2step
+  - signaling (with `gptp_capable`, otherwise that's an error)
+  - peer_delay_request
+  - announce
 - TODO: handle `logMessageInterval == 126 || 127 || 128` in all message types
 - TODO: maybe it would be a good idea to create a `struct PacketState` where all possible errors are set as one big bitfield?
 - TODO: logo
