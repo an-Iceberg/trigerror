@@ -3,7 +3,7 @@
 A small utility app with a CLI for monitoring network traffic and creating recordings with error logs upon detecting
 a protocol error in a packet.
 
-# Prerequisites
+# Requirements
 
 ## Install Rust
 
