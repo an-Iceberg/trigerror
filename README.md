@@ -96,6 +96,9 @@ cargo clean
 
 # Consider creating a generic `enum` with an `Uninitialized` variant and use it where it makes sense. Or just use an `Option`.
 
+- TODO: to verify the correctness of the protocol, create small test `.pcap` scenarios (3-10 packets) and let the `GPTP` verify
+  them like so:
+  ![](tests.png)
 - TODO: create tests. for that create `PcapPackets` and a `GPTP` validator, one by one feed the `PcapPacket`s to the `GPTP`
   validator and verify that the correct error messages are returned.
 - TODO: Intona Ether Tap is a tap device. Consider using [tappers](https://crates.io/crates/tappers)
