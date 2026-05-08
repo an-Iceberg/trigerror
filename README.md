@@ -76,7 +76,8 @@ cargo clean
 ```
 
 # Roadmap
-1. Async timer to detect missing packets (packet never arrives) and to finish writing to file.
+1. threading model. we prolly won't need any async if we do it cleverly.
+1. timer to detect missing packets (packet never arrives) and to finish writing to file.
   This requires a time driven approach instead of an event driven approach. Timer sends signal every second.
   (observer pattern) (Qt signals and slots)
 1. intona ethernet tap
@@ -84,6 +85,7 @@ cargo clean
 1. implement verification for the remaining packets so that gPTP is implemented more or less completely
 1. capture on multiple interfaces. one thread for each interface
   - an error on one interface triggers a recording on all interfaces
+1. implement `out_dir`
 ## More Distant Goals
 - small dashboard in the console with size of buffer, amount of errors recorded, etc.
 - more protocols. select which protocol(s) should trigger a recording
